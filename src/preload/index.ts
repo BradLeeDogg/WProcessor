@@ -48,6 +48,14 @@ const api: WProcessorAPI = {
   window: {
     setFullScreen: (on) => ipcRenderer.invoke('window:setFullScreen', on),
     isFullScreen: () => ipcRenderer.invoke('window:isFullScreen')
+  },
+  search: {
+    run: (criteria) => ipcRenderer.invoke('search:run', criteria)
+  },
+  collection: {
+    list: () => ipcRenderer.invoke('collection:list'),
+    create: (name, criteria) => ipcRenderer.invoke('collection:create', name, criteria),
+    remove: (id) => ipcRenderer.invoke('collection:remove', id)
   }
 }
 

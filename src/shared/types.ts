@@ -109,6 +109,28 @@ export interface BackupInfo {
   sizeBytes: number
 }
 
+/** Filter that drives both ad-hoc search and saved collections. */
+export interface CollectionCriteria {
+  text?: string
+  labelId?: string | null
+  statusId?: string | null
+}
+
+export interface SearchResult {
+  itemId: string
+  title: string
+  snippet: string
+  matches: number
+}
+
+/** A saved, reusable, dynamic grouping evaluated from its criteria. */
+export interface Collection {
+  id: string
+  name: string
+  criteria: CollectionCriteria
+  createdAt: number
+}
+
 export const DEFAULT_MANUSCRIPT: ManuscriptDefaults = {
   fontFamily: 'Times New Roman',
   fontSizePt: 12,

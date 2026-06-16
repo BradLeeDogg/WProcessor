@@ -4,8 +4,6 @@ import type { LabelDef } from '@shared/api'
 
 export type DB = Database.Database
 
-const SCHEMA_VERSION = 1
-
 /**
  * Open (or create) the per-project SQLite database, applying pragmas tuned for
  * durability and running idempotent migrations. The DB holds structure and
@@ -20,6 +18,7 @@ export function openDatabase(dbPath: string): DB {
   return db
 }
 
+// Each block advances user_version by one; new databases run through all of them.
 function migrate(db: DB): void {
   const current = db.pragma('user_version', { simple: true }) as number
   if (current < 1) {
@@ -63,9 +62,19 @@ function migrate(db: DB): void {
       );
       CREATE INDEX idx_snapshots_item ON snapshots(item_id, created_at DESC);
     `)
-    db.pragma(`user_version = ${SCHEMA_VERSION}`)
+    db.pragma('user_version = 1')
   }
-  // Future migrations: if (current < 2) { ... } and bump user_version.
+  if (current < 2) {
+    db.exec(`
+      CREATE TABLE collections (
+        id            TEXT PRIMARY KEY,
+        name          TEXT NOT NULL,
+        criteria_json TEXT NOT NULL,
+        created_at    INTEGER NOT NULL
+      );
+    `)
+    db.pragma('user_version = 2')
+  }
 }
 
 // --- meta key/value helpers -------------------------------------------------

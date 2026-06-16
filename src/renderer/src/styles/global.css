@@ -934,6 +934,90 @@ button.on {
   width: 8rem;
 }
 
+/* --- find (search + collections) --------------------------- */
+.find-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  border-bottom: 1px solid var(--rule);
+}
+.find-filters {
+  display: flex;
+  gap: 0.4rem;
+}
+.find-filters select {
+  flex: 1;
+  font-size: 0.78rem;
+}
+.find-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+.find-actions button {
+  font-size: 0.8rem;
+}
+.find-results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  flex: 1;
+  min-height: 2rem;
+}
+.find-result {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  border-bottom: 1px solid var(--rule);
+  border-radius: 0;
+  gap: 0.2rem;
+}
+.find-title {
+  font-weight: 600;
+  font-size: 0.84rem;
+}
+.find-count {
+  color: var(--accent);
+  font-weight: 400;
+}
+.find-snippet {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  line-height: 1.35;
+}
+.find-collections {
+  border-top: 1px solid var(--rule);
+  padding-bottom: 0.5rem;
+}
+.find-collections h4 {
+  margin: 0;
+  padding: 0.5rem 0.7rem 0.3rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+}
+.find-collections ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.find-collections li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 0.5rem;
+}
+.find-collection {
+  flex: 1;
+  text-align: left;
+  font-size: 0.84rem;
+  padding: 0.35rem 0.4rem;
+}
+
 /* --- snapshots drawer -------------------------------------- */
 .drawer {
   height: 100%;

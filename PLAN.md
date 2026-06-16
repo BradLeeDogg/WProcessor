@@ -74,12 +74,12 @@ MyNovel.writeproject/
 - [x] Reusable DocumentEditor extracted (single / split / scrivenings / composition)
 - Note: composition covers the active monitor; multi-monitor blackout deferred.
 
-### M3 — Phase 3: Planning & organization
+### M3 — Phase 3: Planning & organization  ✅
 - [x] Corkboard (synopsis cards; drag reorders binder; color-coded status)
 - [x] Outliner (TanStack Table: title/synopsis/word count/label/status; inline edit; reorder)
 - [x] Folder view switch (Stitched / Corkboard / Outline)
-- [ ] Full-text search across project
-- [ ] Saved collections (dynamic, search/metadata-driven, cross-binder)
+- [x] Full-text search across project (label/status filters; on-demand scan)
+- [x] Saved collections (dynamic, criteria-driven, cross-binder) — schema v2
 
 ### M4 — Phase 4: Metadata, research & journalism workflow
 - [ ] Inspector (synopsis, notes, label/status, custom metadata: POV/setting/characters)

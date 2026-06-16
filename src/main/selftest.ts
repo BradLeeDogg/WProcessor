@@ -7,6 +7,8 @@ import { createItem, listBinder, moveItem, removeItem } from './services/binder'
 import { countWords, emptyDoc, readDocument, writeDocument } from './services/documents'
 import { createSnapshot, listSnapshots, restoreSnapshot } from './services/snapshots'
 import { createBackup } from './services/backups'
+import { searchProject } from './services/search'
+import { createCollection, listCollections, removeCollection } from './services/collections'
 import type { DocumentContent } from '@shared/types'
 
 function assert(cond: unknown, msg: string): void {
@@ -73,6 +75,16 @@ export async function runSelfTest(): Promise<void> {
 
   const info = await createBackup(paths.root, db)
   assert(existsSync(info.path) && info.sizeBytes > 0, 'backup zip written')
+
+  const hits = await searchProject(db, paths.root, { text: 'wprocessor' })
+  assert(hits.some((h) => h.itemId === doc.id && h.matches >= 1), 'full-text search finds a match')
+  const miss = await searchProject(db, paths.root, { text: 'zzqqxnotpresent' })
+  assert(miss.length === 0, 'search returns nothing for absent text')
+
+  const coll = createCollection(db, 'Mentions WProcessor', { text: 'wprocessor' })
+  assert(listCollections(db).length === 1, 'collection saved')
+  removeCollection(db, coll.id)
+  assert(listCollections(db).length === 0, 'collection removed')
 
   removeItem(db, created.id)
   assert(

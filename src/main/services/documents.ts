@@ -26,11 +26,16 @@ function gatherText(node: ProseMirrorNode, out: string[]): void {
   if (node.content) for (const child of node.content) gatherText(child, out)
 }
 
-/** Count words across all text in a document (whitespace-delimited). */
-export function countWords(content: DocumentContent): number {
+/** Flatten a document to plain text (for word counting and search). */
+export function extractPlainText(content: DocumentContent): string {
   const parts: string[] = []
   gatherText(content.doc, parts)
-  const text = parts.join(' ').trim()
+  return parts.join(' ')
+}
+
+/** Count words across all text in a document (whitespace-delimited). */
+export function countWords(content: DocumentContent): number {
+  const text = extractPlainText(content).trim()
   if (!text) return 0
   return text.match(/\S+/g)?.length ?? 0
 }

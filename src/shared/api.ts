@@ -2,11 +2,14 @@ import type {
   BinderItem,
   BinderItemType,
   BackupInfo,
+  Collection,
+  CollectionCriteria,
   DocumentContent,
   ProjectMeta,
   ProjectSettings,
   ProjectType,
   RecentProject,
+  SearchResult,
   Snapshot
 } from './types'
 
@@ -96,5 +99,13 @@ export interface WProcessorAPI {
     /** Toggle borderless full-screen (composition mode). Returns the new state. */
     setFullScreen(on: boolean): Promise<boolean>
     isFullScreen(): Promise<boolean>
+  }
+  search: {
+    run(criteria: CollectionCriteria): Promise<SearchResult[]>
+  }
+  collection: {
+    list(): Promise<Collection[]>
+    create(name: string, criteria: CollectionCriteria): Promise<Collection>
+    remove(id: string): Promise<Collection[]>
   }
 }

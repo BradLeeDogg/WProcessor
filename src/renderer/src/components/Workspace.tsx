@@ -7,6 +7,7 @@ import Editor from './Editor'
 import SplitPane from './SplitPane'
 import SnapshotsPanel from './SnapshotsPanel'
 import TargetsPanel from './TargetsPanel'
+import FindPanel from './FindPanel'
 import CompositionMode from './CompositionMode'
 
 function saveLabel(state: string, at: number | null): string {
@@ -38,6 +39,7 @@ export default function Workspace(): JSX.Element {
 
   const [showSnapshots, setShowSnapshots] = useState(false)
   const [showTargets, setShowTargets] = useState(false)
+  const [showFind, setShowFind] = useState(false)
   const [backupMsg, setBackupMsg] = useState<string | null>(null)
 
   const handleClose = async (): Promise<void> => {
@@ -82,6 +84,9 @@ export default function Workspace(): JSX.Element {
           </span>
           <span className={`savestate ${saveState}`}>{saveLabel(saveState, lastSavedAt)}</span>
           <span className="sep" />
+          <button className={showFind ? 'on' : ''} onClick={() => setShowFind((v) => !v)}>
+            Find
+          </button>
           <button className={splitId ? 'on' : ''} onClick={toggleSplit}>
             Split
           </button>
@@ -115,10 +120,18 @@ export default function Workspace(): JSX.Element {
               </Panel>
             </>
           )}
+          {showFind && (
+            <>
+              <PanelResizeHandle className="resize-handle" />
+              <Panel id="find" order={4} defaultSize={24} minSize={16} maxSize={40} className="pane">
+                <FindPanel onClose={() => setShowFind(false)} />
+              </Panel>
+            </>
+          )}
           {showTargets && (
             <>
               <PanelResizeHandle className="resize-handle" />
-              <Panel id="targets" order={4} defaultSize={22} minSize={16} maxSize={38} className="pane">
+              <Panel id="targets" order={5} defaultSize={22} minSize={16} maxSize={38} className="pane">
                 <TargetsPanel onClose={() => setShowTargets(false)} />
               </Panel>
             </>
@@ -126,7 +139,7 @@ export default function Workspace(): JSX.Element {
           {showSnapshots && (
             <>
               <PanelResizeHandle className="resize-handle" />
-              <Panel id="snapshots" order={5} defaultSize={24} minSize={16} maxSize={40} className="pane">
+              <Panel id="snapshots" order={6} defaultSize={24} minSize={16} maxSize={40} className="pane">
                 <SnapshotsPanel onClose={() => setShowSnapshots(false)} />
               </Panel>
             </>

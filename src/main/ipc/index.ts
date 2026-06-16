@@ -13,6 +13,9 @@ import { documentFile, snapshotFile } from '../services/paths'
 import * as snapshots from '../services/snapshots'
 import { createBackup, listBackups, pruneBackups } from '../services/backups'
 import { getRecents, removeRecent } from '../services/recents'
+import { searchProject } from '../services/search'
+import { createCollection, listCollections, removeCollection } from '../services/collections'
+import type { CollectionCriteria } from '@shared/types'
 
 function focusedWindow(): BrowserWindow | undefined {
   return BrowserWindow.getFocusedWindow() ?? undefined
@@ -169,5 +172,23 @@ export function registerIpc(): void {
   ipcMain.handle('window:isFullScreen', (e) => {
     const win = BrowserWindow.fromWebContents(e.sender)
     return win?.isFullScreen() ?? false
+  })
+
+  // --- search & collections -------------------------------------------------
+  ipcMain.handle('search:run', (_e, criteria: CollectionCriteria) => {
+    const { db, paths } = projectService.requireCurrent()
+    return searchProject(db, paths.root, criteria)
+  })
+  ipcMain.handle('collection:list', () => {
+    const { db } = projectService.requireCurrent()
+    return listCollections(db)
+  })
+  ipcMain.handle('collection:create', (_e, name: string, criteria: CollectionCriteria) => {
+    const { db } = projectService.requireCurrent()
+    return createCollection(db, name, criteria)
+  })
+  ipcMain.handle('collection:remove', (_e, id: string) => {
+    const { db } = projectService.requireCurrent()
+    return removeCollection(db, id)
   })
 }
