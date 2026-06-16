@@ -94,6 +94,11 @@ app.whenReady().then(() => {
             (async () => {
               const folder = S.getState().tree.find((t) => t.type === 'folder');
               if (folder) S.getState().select(folder.id);
+              await step(() => {
+                document.querySelectorAll('button').forEach((b) => {
+                  if (b.textContent === 'Find' || b.textContent === 'Inspector') b.click();
+                });
+              }, 450);
               await step(() => S.getState().setFolderView('corkboard'), 450);
               await step(() => S.getState().setFolderView('outliner'), 450);
               await step(() => S.getState().setFolderView('scrivenings'), 450);
@@ -105,9 +110,9 @@ app.whenReady().then(() => {
           })`
         )
         setTimeout(() => {
-          console.log('WP_SMOKE_WORKSPACE_OK: workspace, corkboard, outliner, split & composition mounted')
+          console.log('WP_SMOKE_WORKSPACE_OK: workspace, find, inspector, corkboard, outliner, split & composition mounted')
           app.quit()
-        }, 3600)
+        }, 4200)
       } catch (err) {
         console.error('WP_SMOKE_DRIVE_FAILED:', err)
         app.quit()

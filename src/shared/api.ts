@@ -5,6 +5,9 @@ import type {
   Collection,
   CollectionCriteria,
   DocumentContent,
+  MetaField,
+  MetaFieldType,
+  MetaValues,
   ProjectMeta,
   ProjectSettings,
   ProjectType,
@@ -74,6 +77,7 @@ export interface WProcessorAPI {
     create(input: BinderCreateInput): Promise<{ item: BinderItem; tree: BinderItem[] }>
     rename(id: string, title: string): Promise<BinderItem[]>
     updateSynopsis(id: string, synopsis: string): Promise<void>
+    updateNotes(id: string, notes: string): Promise<void>
     setLabel(id: string, labelId: string | null): Promise<void>
     setStatus(id: string, statusId: string | null): Promise<void>
     setCollapsed(id: string, collapsed: boolean): Promise<void>
@@ -107,5 +111,16 @@ export interface WProcessorAPI {
     list(): Promise<Collection[]>
     create(name: string, criteria: CollectionCriteria): Promise<Collection>
     remove(id: string): Promise<Collection[]>
+  }
+  metadata: {
+    listFields(): Promise<MetaField[]>
+    createField(name: string, type: MetaFieldType, options?: string[]): Promise<MetaField>
+    updateField(
+      id: string,
+      patch: Partial<Pick<MetaField, 'name' | 'type' | 'options'>>
+    ): Promise<MetaField[]>
+    removeField(id: string): Promise<MetaField[]>
+    getValues(itemId: string): Promise<MetaValues>
+    setValue(itemId: string, fieldId: string, value: string): Promise<void>
   }
 }

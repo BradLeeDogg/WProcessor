@@ -22,6 +22,7 @@ export interface BinderItem {
   type: BinderItemType
   title: string
   synopsis: string
+  notes: string
   labelId: string | null
   statusId: string | null
   /** Whether this folder is collapsed in the binder UI. */
@@ -130,6 +131,20 @@ export interface Collection {
   criteria: CollectionCriteria
   createdAt: number
 }
+
+export type MetaFieldType = 'text' | 'select' | 'number'
+
+/** A user-definable, project-level metadata field (e.g. POV, Setting). */
+export interface MetaField {
+  id: string
+  name: string
+  type: MetaFieldType
+  options: string[]
+  position: number
+}
+
+/** Per-item metadata: fieldId -> value. */
+export type MetaValues = Record<string, string>
 
 export const DEFAULT_MANUSCRIPT: ManuscriptDefaults = {
   fontFamily: 'Times New Roman',

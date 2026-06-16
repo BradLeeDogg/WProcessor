@@ -75,6 +75,28 @@ function migrate(db: DB): void {
     `)
     db.pragma('user_version = 2')
   }
+  if (current < 3) {
+    db.exec(`
+      ALTER TABLE binder_items ADD COLUMN notes TEXT NOT NULL DEFAULT '';
+
+      CREATE TABLE metadata_fields (
+        id           TEXT PRIMARY KEY,
+        name         TEXT NOT NULL,
+        type         TEXT NOT NULL,          -- 'text' | 'select' | 'number'
+        options_json TEXT NOT NULL DEFAULT '[]',
+        position     INTEGER NOT NULL
+      );
+
+      CREATE TABLE metadata_values (
+        item_id  TEXT NOT NULL,
+        field_id TEXT NOT NULL,
+        value    TEXT NOT NULL DEFAULT '',
+        PRIMARY KEY (item_id, field_id)
+      );
+      CREATE INDEX idx_meta_values_item ON metadata_values(item_id);
+    `)
+    db.pragma('user_version = 3')
+  }
 }
 
 // --- meta key/value helpers -------------------------------------------------
@@ -101,6 +123,7 @@ interface BinderRow {
   type: string
   title: string
   synopsis: string
+  notes: string
   label_id: string | null
   status_id: string | null
   collapsed: number
@@ -118,6 +141,7 @@ export function rowToBinderItem(r: BinderRow): BinderItem {
     type: r.type as BinderItem['type'],
     title: r.title,
     synopsis: r.synopsis,
+    notes: r.notes ?? '',
     labelId: r.label_id,
     statusId: r.status_id,
     collapsed: r.collapsed === 1,

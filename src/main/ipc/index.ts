@@ -15,7 +15,8 @@ import { createBackup, listBackups, pruneBackups } from '../services/backups'
 import { getRecents, removeRecent } from '../services/recents'
 import { searchProject } from '../services/search'
 import { createCollection, listCollections, removeCollection } from '../services/collections'
-import type { CollectionCriteria } from '@shared/types'
+import * as metadata from '../services/metadata'
+import type { CollectionCriteria, MetaField, MetaFieldType } from '@shared/types'
 
 function focusedWindow(): BrowserWindow | undefined {
   return BrowserWindow.getFocusedWindow() ?? undefined
@@ -77,6 +78,11 @@ export function registerIpc(): void {
   ipcMain.handle('binder:updateSynopsis', (_e, id: string, synopsis: string) => {
     const { db } = projectService.requireCurrent()
     binder.setSynopsis(db, id, synopsis)
+  })
+
+  ipcMain.handle('binder:updateNotes', (_e, id: string, notes: string) => {
+    const { db } = projectService.requireCurrent()
+    binder.setNotes(db, id, notes)
   })
 
   ipcMain.handle('binder:setLabel', (_e, id: string, labelId: string | null) => {
@@ -190,5 +196,37 @@ export function registerIpc(): void {
   ipcMain.handle('collection:remove', (_e, id: string) => {
     const { db } = projectService.requireCurrent()
     return removeCollection(db, id)
+  })
+
+  // --- metadata fields & values --------------------------------------------
+  ipcMain.handle('metadata:listFields', () => {
+    const { db } = projectService.requireCurrent()
+    return metadata.listFields(db)
+  })
+  ipcMain.handle(
+    'metadata:createField',
+    (_e, name: string, type: MetaFieldType, options?: string[]) => {
+      const { db } = projectService.requireCurrent()
+      return metadata.createField(db, name, type, options ?? [])
+    }
+  )
+  ipcMain.handle(
+    'metadata:updateField',
+    (_e, id: string, patch: Partial<Pick<MetaField, 'name' | 'type' | 'options'>>) => {
+      const { db } = projectService.requireCurrent()
+      return metadata.updateField(db, id, patch)
+    }
+  )
+  ipcMain.handle('metadata:removeField', (_e, id: string) => {
+    const { db } = projectService.requireCurrent()
+    return metadata.removeField(db, id)
+  })
+  ipcMain.handle('metadata:getValues', (_e, itemId: string) => {
+    const { db } = projectService.requireCurrent()
+    return metadata.getValues(db, itemId)
+  })
+  ipcMain.handle('metadata:setValue', (_e, itemId: string, fieldId: string, value: string) => {
+    const { db } = projectService.requireCurrent()
+    metadata.setValue(db, itemId, fieldId, value)
   })
 }

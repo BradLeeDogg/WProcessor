@@ -15,6 +15,7 @@ import { pathExists } from './atomic'
 import { createItemFull, setWordCount } from './binder'
 import { countWords, docFromParagraphs, emptyDoc, writeDocument } from './documents'
 import { factCheckDefault, getTemplate, type TemplateNode } from './templates'
+import { seedDefaultFields } from './metadata'
 import { addRecent } from './recents'
 import { BackupScheduler } from './backups'
 
@@ -172,6 +173,14 @@ class ProjectService {
     }
     this.persistMeta(db, meta)
     this.seedLabels(db)
+    // Narrative-driven types get POV/Setting/Characters fields to start.
+    if (['novel', 'novella', 'short-story', 'journalism-long'].includes(opts.type)) {
+      seedDefaultFields(db, [
+        ['POV', 'text'],
+        ['Setting', 'text'],
+        ['Characters', 'text']
+      ])
+    }
 
     this.pendingWrites = []
     this.applyTemplate(db, root, getTemplate(opts.type, opts.structureOverlay), null)

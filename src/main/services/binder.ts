@@ -94,6 +94,10 @@ export function setSynopsis(db: DB, id: string, synopsis: string): void {
   )
 }
 
+export function setNotes(db: DB, id: string, notes: string): void {
+  db.prepare('UPDATE binder_items SET notes = ?, updated_at = ? WHERE id = ?').run(notes, now(), id)
+}
+
 export function setLabel(db: DB, id: string, labelId: string | null): void {
   db.prepare('UPDATE binder_items SET label_id = ?, updated_at = ? WHERE id = ?').run(
     labelId,

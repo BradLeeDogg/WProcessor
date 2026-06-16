@@ -8,6 +8,7 @@ import SplitPane from './SplitPane'
 import SnapshotsPanel from './SnapshotsPanel'
 import TargetsPanel from './TargetsPanel'
 import FindPanel from './FindPanel'
+import Inspector from './Inspector'
 import CompositionMode from './CompositionMode'
 
 function saveLabel(state: string, at: number | null): string {
@@ -40,6 +41,7 @@ export default function Workspace(): JSX.Element {
   const [showSnapshots, setShowSnapshots] = useState(false)
   const [showTargets, setShowTargets] = useState(false)
   const [showFind, setShowFind] = useState(false)
+  const [showInspector, setShowInspector] = useState(false)
   const [backupMsg, setBackupMsg] = useState<string | null>(null)
 
   const handleClose = async (): Promise<void> => {
@@ -91,6 +93,9 @@ export default function Workspace(): JSX.Element {
             Split
           </button>
           <button onClick={() => setComposition(true)}>Compose</button>
+          <button className={showInspector ? 'on' : ''} onClick={() => setShowInspector((v) => !v)}>
+            Inspector
+          </button>
           <button className={showTargets ? 'on' : ''} onClick={() => setShowTargets((v) => !v)}>
             Targets
           </button>
@@ -136,10 +141,18 @@ export default function Workspace(): JSX.Element {
               </Panel>
             </>
           )}
+          {showInspector && (
+            <>
+              <PanelResizeHandle className="resize-handle" />
+              <Panel id="inspector" order={6} defaultSize={24} minSize={18} maxSize={42} className="pane">
+                <Inspector onClose={() => setShowInspector(false)} />
+              </Panel>
+            </>
+          )}
           {showSnapshots && (
             <>
               <PanelResizeHandle className="resize-handle" />
-              <Panel id="snapshots" order={6} defaultSize={24} minSize={16} maxSize={40} className="pane">
+              <Panel id="snapshots" order={7} defaultSize={24} minSize={16} maxSize={40} className="pane">
                 <SnapshotsPanel onClose={() => setShowSnapshots(false)} />
               </Panel>
             </>

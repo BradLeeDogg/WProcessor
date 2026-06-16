@@ -934,6 +934,92 @@ button.on {
   width: 8rem;
 }
 
+/* --- inspector --------------------------------------------- */
+.inspector {
+  overflow-y: auto;
+}
+.insp-section {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.insp-item-title {
+  font-weight: 600;
+}
+.insp-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+}
+.insp-section textarea {
+  width: 100%;
+  min-height: 3.5em;
+  resize: vertical;
+  font: inherit;
+  font-size: 0.84rem;
+  border: 1px solid var(--rule-strong);
+  border-radius: 6px;
+  padding: 0.4rem;
+  background: var(--card);
+}
+.insp-notes {
+  min-height: 5em !important;
+}
+.insp-row {
+  flex-direction: row;
+  gap: 0.6rem;
+}
+.insp-row > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.insp-row select {
+  width: 100%;
+}
+.insp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-bottom: 0.45rem;
+}
+.insp-field-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.insp-field-x {
+  color: var(--ink-faint);
+  padding: 0 0.3rem;
+  font-size: 0.95rem;
+}
+.insp-field input,
+.insp-field select {
+  width: 100%;
+  font-size: 0.84rem;
+}
+.insp-add-field {
+  display: flex;
+  gap: 0.3rem;
+  margin-top: 0.3rem;
+}
+.insp-add-field input {
+  flex: 1;
+  min-width: 0;
+}
+.insp-add-field select {
+  width: 5.5rem;
+}
+.insp-add-field button {
+  border: 1px solid var(--rule-strong);
+}
+
 /* --- find (search + collections) --------------------------- */
 .find-form {
   display: flex;

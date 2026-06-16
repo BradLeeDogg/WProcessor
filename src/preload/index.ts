@@ -24,6 +24,7 @@ const api: WProcessorAPI = {
     create: (input) => ipcRenderer.invoke('binder:create', input),
     rename: (id, title) => ipcRenderer.invoke('binder:rename', id, title),
     updateSynopsis: (id, synopsis) => ipcRenderer.invoke('binder:updateSynopsis', id, synopsis),
+    updateNotes: (id, notes) => ipcRenderer.invoke('binder:updateNotes', id, notes),
     setLabel: (id, labelId) => ipcRenderer.invoke('binder:setLabel', id, labelId),
     setStatus: (id, statusId) => ipcRenderer.invoke('binder:setStatus', id, statusId),
     setCollapsed: (id, collapsed) => ipcRenderer.invoke('binder:setCollapsed', id, collapsed),
@@ -56,6 +57,16 @@ const api: WProcessorAPI = {
     list: () => ipcRenderer.invoke('collection:list'),
     create: (name, criteria) => ipcRenderer.invoke('collection:create', name, criteria),
     remove: (id) => ipcRenderer.invoke('collection:remove', id)
+  },
+  metadata: {
+    listFields: () => ipcRenderer.invoke('metadata:listFields'),
+    createField: (name, type, options) =>
+      ipcRenderer.invoke('metadata:createField', name, type, options),
+    updateField: (id, patch) => ipcRenderer.invoke('metadata:updateField', id, patch),
+    removeField: (id) => ipcRenderer.invoke('metadata:removeField', id),
+    getValues: (itemId) => ipcRenderer.invoke('metadata:getValues', itemId),
+    setValue: (itemId, fieldId, value) =>
+      ipcRenderer.invoke('metadata:setValue', itemId, fieldId, value)
   }
 }
 

@@ -3,7 +3,8 @@ import { promises as fs } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { projectService } from './services/project'
-import { createItem, listBinder, moveItem, removeItem } from './services/binder'
+import { createItem, listBinder, moveItem, removeItem, setNotes } from './services/binder'
+import * as meta from './services/metadata'
 import { countWords, emptyDoc, readDocument, writeDocument } from './services/documents'
 import { createSnapshot, listSnapshots, restoreSnapshot } from './services/snapshots'
 import { createBackup } from './services/backups'
@@ -85,6 +86,16 @@ export async function runSelfTest(): Promise<void> {
   assert(listCollections(db).length === 1, 'collection saved')
   removeCollection(db, coll.id)
   assert(listCollections(db).length === 0, 'collection removed')
+
+  assert(meta.listFields(db).length >= 3, 'default metadata fields seeded (POV/Setting/Characters)')
+  const field = meta.createField(db, 'Mood', 'text')
+  meta.setValue(db, doc.id, field.id, 'tense')
+  assert(meta.getValues(db, doc.id)[field.id] === 'tense', 'metadata value round-trips')
+  setNotes(db, doc.id, 'check quote against tape')
+  assert(
+    listBinder(db).find((i) => i.id === doc.id)!.notes === 'check quote against tape',
+    'item notes persist'
+  )
 
   removeItem(db, created.id)
   assert(

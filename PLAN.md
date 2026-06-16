@@ -82,8 +82,8 @@ MyNovel.writeproject/
 - [x] Saved collections (dynamic, criteria-driven, cross-binder) — schema v2
 
 ### M4 — Phase 4: Metadata, research & journalism workflow
-- [ ] Inspector (synopsis, notes, label/status, custom metadata: POV/setting/characters)
-- [ ] User-definable custom fields
+- [x] Inspector (synopsis, notes, label/status, custom metadata: POV/setting/characters) — schema v3
+- [x] User-definable custom fields (text/number/select; seeded for fiction + features)
 - [ ] Research capture (Readability + sanitize), PDFs/images/bios as assets
 - [ ] Source linking + tracking; auto-generated Notes/References/Bibliography (toggle)
 - [ ] Fact-check packet (claims tied to sources; verified/needs-sourcing/disputed; unsourced list; quote-vs-audio flags; export)
