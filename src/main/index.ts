@@ -1,6 +1,8 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import { registerIpc } from './ipc'
+import { projectService } from './services/project'
 
 function createWindow(): BrowserWindow {
   const window = new BrowserWindow({
@@ -20,12 +22,24 @@ function createWindow(): BrowserWindow {
     }
   })
 
+  if (process.env['WP_SMOKE']) {
+    // Surface renderer crashes/errors during a headless boot test.
+    window.webContents.on('console-message', (_e, level, message) => {
+      if (level >= 2) console.log('RENDERER_CONSOLE:', message)
+    })
+    window.webContents.on('render-process-gone', (_e, details) =>
+      console.log('RENDER_PROCESS_GONE:', details.reason)
+    )
+  }
+
   window.on('ready-to-show', () => {
     window.show()
-    // Headless CI/smoke boot: prove the window initialized + painted, then exit.
+    // Headless CI/smoke boot: let the renderer mount + call the bridge, then exit.
     if (process.env['WP_SMOKE']) {
-      console.log('WP_SMOKE_OK: window booted and reached ready-to-show')
-      setTimeout(() => app.quit(), 250)
+      setTimeout(() => {
+        console.log('WP_SMOKE_OK: window booted, renderer mounted')
+        app.quit()
+      }, 1200)
     }
   })
 
@@ -50,9 +64,19 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(win)
   })
 
-  // Minimal health check so the renderer can confirm the bridge is live.
-  // The full project/binder/document IPC surface is registered in M1.
-  ipcMain.handle('app:health', () => ({ ok: true as const, pid: process.pid }))
+  registerIpc()
+
+  // End-to-end storage verification (dev/CI only); never runs in the shipped app.
+  if (process.env['WP_SELFTEST']) {
+    import('./selftest')
+      .then((m) => m.runSelfTest())
+      .then(() => app.exit(0))
+      .catch((err) => {
+        console.error('SELFTEST_FAILED:', err)
+        app.exit(1)
+      })
+    return
+  }
 
   createWindow()
 
@@ -63,4 +87,10 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
+})
+
+// Checkpoint + close the open project's database before exit so the WAL is
+// folded back in and nothing is left half-flushed.
+app.on('before-quit', () => {
+  void projectService.close()
 })

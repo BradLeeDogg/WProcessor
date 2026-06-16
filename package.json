@@ -20,6 +20,7 @@
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^3.0.0",
+    "archiver": "^7.0.1",
     "better-sqlite3": "^11.8.1"
   },
   "devDependencies": {
@@ -37,6 +38,7 @@
     "@tiptap/pm": "^2.11.5",
     "@tiptap/react": "^2.11.5",
     "@tiptap/starter-kit": "^2.11.5",
+    "@types/archiver": "^6.0.4",
     "@types/better-sqlite3": "^7.6.12",
     "@types/node": "^22.13.5",
     "@types/react": "^18.3.18",

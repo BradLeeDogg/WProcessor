@@ -54,16 +54,17 @@ MyNovel.writeproject/
 - [x] better-sqlite3 rebuilt against Electron
 
 ### M1 — Phase 1: Core writing loop (MVP)
-- [ ] Storage services: project-as-folder create/open, SQLite schema, atomic file writes
-- [ ] Project launcher: create (from type template) / open / switch / close; recent projects
-- [ ] Type templates: novel, novella, short story, nonfiction book, journalism (short/long), dissertation
-- [ ] Binder tree: create, rename, delete, nest, drag-reorder (dnd-kit)
-- [ ] Editor: TipTap in centered paper column — **12pt Times New Roman, double-spaced, 1in margins, US Letter**
-- [ ] Autosave to disk (debounced, atomic) + reload on open
-- [ ] Live word count (per document + per selection)
-- [ ] Inline comments + footnotes/endnotes (custom nodes/marks)
-- [ ] Manual named snapshots with one-click rollback
-- [ ] Automatic timestamped folder backups (background)
+- [x] Storage services: project-as-folder create/open, SQLite schema, atomic file writes
+- [x] Project launcher: create (from type template) / open / switch / close; recent projects
+- [x] Type templates: novel, novella, short story, nonfiction book, journalism (short/long), dissertation
+- [x] Binder tree: create, rename, delete, nest, drag-reorder (dnd-kit)
+- [x] Editor: TipTap in centered paper column — **12pt Times New Roman, double-spaced, 1in margins, US Letter**
+- [x] Autosave to disk (debounced, atomic) + reload on open
+- [x] Live word count (per document + per selection)
+- [ ] Inline comments + footnotes/endnotes (custom nodes/marks) — M1b, in progress
+- [x] Manual named snapshots with one-click rollback
+- [x] Automatic timestamped folder backups (background)
+- [x] End-to-end storage self-test (WP_SELFTEST) green in Electron runtime
 
 ### M2 — Phase 2: Structure & viewing modes
 - [ ] Scrivenings (stitched continuous editable view of a folder's children)
