@@ -41,6 +41,8 @@ export default function Workspace(): JSX.Element {
   const setSplit = useStore((s) => s.setSplit)
   const composition = useStore((s) => s.composition)
   const setComposition = useStore((s) => s.setComposition)
+  const setFolderView = useStore((s) => s.setFolderView)
+  const select = useStore((s) => s.select)
 
   const [showSnapshots, setShowSnapshots] = useState(false)
   const [showTargets, setShowTargets] = useState(false)
@@ -79,6 +81,22 @@ export default function Workspace(): JSX.Element {
     setSplit(target)
   }
 
+  // Open the corkboard for the most relevant folder: the selection if it's a
+  // folder, else its parent folder, else the first top-level folder.
+  const openCorkboard = (): void => {
+    const sel = tree.find((t) => t.id === selectedId)
+    const folderId =
+      sel?.type === 'folder'
+        ? sel.id
+        : sel?.parentId ??
+          tree.find((t) => t.type === 'folder' && t.parentId === null)?.id ??
+          tree.find((t) => t.type === 'folder')?.id ??
+          null
+    if (!folderId) return
+    select(folderId)
+    setFolderView('corkboard')
+  }
+
   return (
     <div className="workspace">
       <header className="topbar">
@@ -102,6 +120,9 @@ export default function Workspace(): JSX.Element {
             Split
           </button>
           <button onClick={() => setComposition(true)}>Compose</button>
+          <button onClick={openCorkboard} title="Index cards for a folder">
+            Corkboard
+          </button>
           <button className={showInspector ? 'on' : ''} onClick={() => setShowInspector((v) => !v)}>
             Inspector
           </button>

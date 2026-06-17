@@ -2,10 +2,23 @@ import { useEffect, useState } from 'react'
 import { useStore } from '../store/useStore'
 import DocumentEditor from './DocumentEditor'
 
+/** Distraction-free backdrops: dark "smoke", neutral paper, or warm parchment. */
+const SCENES = [
+  { value: 'smoke', label: 'Smoke' },
+  { value: 'paper', label: 'Paper' },
+  { value: 'parchment', label: 'Parchment' }
+] as const
+type Scene = (typeof SCENES)[number]['value']
+
+function loadScene(): Scene {
+  const v = typeof localStorage !== 'undefined' ? localStorage.getItem('wp-compose-scene') : null
+  return v === 'paper' || v === 'parchment' ? v : 'smoke'
+}
+
 /**
- * Distraction-free full-screen composition. A borderless full-screen window with
- * a solid dark backdrop — nothing on screen but the words. Optional typewriter
- * scrolling keeps the current line vertically centered.
+ * Distraction-free full-screen composition — nothing on screen but the words.
+ * The backdrop is selectable (a dark "smoke screen" or a light paper sheet), and
+ * optional typewriter scrolling keeps the current line vertically centered.
  */
 export default function CompositionMode(): JSX.Element {
   const selectedId = useStore((s) => s.selectedId)
@@ -17,6 +30,16 @@ export default function CompositionMode(): JSX.Element {
   const selected = tree.find((t) => t.id === selectedId) ?? null
   const isDoc = selected?.type === 'document'
   const [typewriter, setTypewriter] = useState(true)
+  const [scene, setScene] = useState<Scene>(loadScene)
+
+  const changeScene = (s: Scene): void => {
+    setScene(s)
+    try {
+      localStorage.setItem('wp-compose-scene', s)
+    } catch {
+      /* localStorage unavailable — keep the in-memory choice */
+    }
+  }
 
   useEffect(() => {
     void window.api.window.setFullScreen(true)
@@ -35,11 +58,22 @@ export default function CompositionMode(): JSX.Element {
   void typewriterDefault
 
   return (
-    <div className="composition">
+    <div className="composition" data-scene={scene}>
       <div className="composition-bar">
         <span className="composition-title">{selected?.title ?? 'Composition'}</span>
         <span className="spacer" />
         <span className="muted">{docWordCount.toLocaleString()} words</span>
+        <div className="scene-switch" title="Backdrop">
+          {SCENES.map((s) => (
+            <button
+              key={s.value}
+              className={scene === s.value ? 'on' : ''}
+              onClick={() => changeScene(s.value)}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
         <button className={typewriter ? 'on' : ''} onClick={() => setTypewriter((v) => !v)}>
           Typewriter
         </button>

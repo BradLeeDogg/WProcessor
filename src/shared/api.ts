@@ -36,11 +36,52 @@ export interface CreateProjectOptions {
   type: ProjectType
   /** Parent directory to create `<title>.writeproject` inside. */
   location: string
-  /** Apply an optional fiction structure overlay (novel/novella only). */
+  /** Apply an optional structure overlay appropriate to the project type. */
   structureOverlay?: StructureOverlay | null
 }
 
-export type StructureOverlay = 'three-act' | 'seven-point' | 'heros-journey' | 'save-the-cat'
+export type StructureOverlay =
+  // fiction beat sheets
+  | 'three-act'
+  | 'seven-point'
+  | 'heros-journey'
+  | 'save-the-cat'
+  // nonfiction book
+  | 'nf-narrative'
+  | 'nf-argument'
+  | 'nf-prescriptive'
+  // journalism
+  | 'news-inverted-pyramid'
+  | 'feature-anatomy'
+  // dissertation / thesis
+  | 'diss-standard'
+  | 'diss-imrad'
+
+/** Display names for each overlay (shared by the launcher and the templates). */
+export const OVERLAY_LABELS: Record<StructureOverlay, string> = {
+  'three-act': 'Three-Act',
+  'seven-point': 'Seven-Point',
+  'heros-journey': "Hero's Journey",
+  'save-the-cat': 'Save the Cat',
+  'nf-narrative': 'Narrative Arc',
+  'nf-argument': 'Argument',
+  'nf-prescriptive': 'Prescriptive / How-To',
+  'news-inverted-pyramid': 'Inverted Pyramid',
+  'feature-anatomy': 'Feature Anatomy',
+  'diss-standard': 'Standard (Abstract → Conclusion)',
+  'diss-imrad': 'IMRaD'
+}
+
+/** Which overlays are offered for each project type (absent = none). */
+export const OVERLAYS_BY_TYPE: Partial<Record<ProjectType, StructureOverlay[]>> = {
+  novel: ['three-act', 'seven-point', 'heros-journey', 'save-the-cat'],
+  novella: ['three-act', 'seven-point', 'heros-journey', 'save-the-cat'],
+  'short-story': ['three-act', 'seven-point'],
+  'nonfiction-book': ['nf-narrative', 'nf-argument', 'nf-prescriptive'],
+  'journalism-short': ['news-inverted-pyramid', 'feature-anatomy'],
+  'journalism-long': ['feature-anatomy', 'news-inverted-pyramid'],
+  dissertation: ['diss-standard', 'diss-imrad']
+}
 
 /** Returned when a project opens — everything the renderer needs to render. */
 export interface OpenProjectResult {

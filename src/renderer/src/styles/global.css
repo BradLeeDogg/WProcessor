@@ -649,14 +649,36 @@ button.on {
   min-height: 0;
 }
 
-/* --- composition mode (dark, distraction-free) ------------- */
+/* --- composition mode (selectable backdrop) ---------------- */
 .composition {
   position: fixed;
   inset: 0;
   z-index: 50;
-  background: #111014;
   display: flex;
   flex-direction: column;
+  background: var(--c-backdrop);
+}
+/* Scene palettes — "smoke" reproduces the original dark look. */
+.composition[data-scene='smoke'] {
+  --c-backdrop: #111014;
+  --c-paper: transparent;
+  --c-ink: #e7e3d8;
+  --c-ghost: #56524a;
+  --c-shadow: none;
+}
+.composition[data-scene='paper'] {
+  --c-backdrop: #c7c2b3;
+  --c-paper: #f6f4ed;
+  --c-ink: #1f1d18;
+  --c-ghost: #b3ad9f;
+  --c-shadow: 0 8px 40px rgba(0, 0, 0, 0.18);
+}
+.composition[data-scene='parchment'] {
+  --c-backdrop: #2a2620;
+  --c-paper: #efe6d0;
+  --c-ink: #2a2118;
+  --c-ghost: #a99f86;
+  --c-shadow: 0 12px 50px rgba(0, 0, 0, 0.45);
 }
 .composition-bar {
   display: flex;
@@ -684,25 +706,62 @@ button.on {
   background: rgba(255, 255, 255, 0.16);
   color: #fff;
 }
+/* Light "paper" scene: darken the faint bar so it stays legible. */
+.composition[data-scene='paper'] .composition-bar {
+  color: #6b6760;
+}
+.composition[data-scene='paper'] .composition-bar .composition-title {
+  color: #3a3730;
+}
+.composition[data-scene='paper'] .composition-bar button {
+  color: #4a463e;
+}
+.composition[data-scene='paper'] .composition-bar button:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+.composition[data-scene='paper'] .composition-bar button.on {
+  background: rgba(0, 0, 0, 0.12);
+  color: #111;
+}
+.scene-switch {
+  display: inline-flex;
+  gap: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 7px;
+  padding: 1px;
+}
+.composition[data-scene='paper'] .scene-switch {
+  border-color: rgba(0, 0, 0, 0.18);
+}
+.scene-switch button {
+  padding: 0.15rem 0.55rem;
+  font-size: 0.74rem;
+  border-radius: 6px;
+}
 .composition-stage {
   flex: 1;
   min-height: 0;
 }
 .composition .editor-scroll {
-  background: #111014;
+  background: var(--c-backdrop);
 }
 .composition .paper {
-  background: transparent;
-  box-shadow: none;
+  background-color: var(--c-paper);
+  box-shadow: var(--c-shadow);
+}
+.composition[data-scene='parchment'] .paper {
+  background-image:
+    radial-gradient(120% 80% at 50% 0%, rgba(255, 252, 240, 0.55), transparent 60%),
+    radial-gradient(120% 80% at 50% 100%, rgba(120, 96, 48, 0.07), transparent 55%);
 }
 .composition .manuscript .ProseMirror {
-  color: #e7e3d8;
+  color: var(--c-ink);
 }
 .composition .manuscript p.is-editor-empty:first-child::before {
-  color: #56524a;
+  color: var(--c-ghost);
 }
 .composition .editor-empty {
-  color: #8c887f;
+  color: var(--c-ghost);
 }
 
 /* typewriter scrolling: room to center first/last lines */
@@ -880,19 +939,36 @@ button.on {
 }
 .view-switch {
   display: flex;
-  gap: 2px;
-  padding: 0.35rem 0.6rem;
+  justify-content: center;
+  padding: 0.5rem;
   border-bottom: 1px solid var(--rule);
   background: var(--paper);
 }
 .view-switch button {
-  font-size: 0.78rem;
-  padding: 0.2rem 0.7rem;
+  font-size: 0.8rem;
+  padding: 0.3rem 1.1rem;
   color: var(--ink-soft);
+  background: var(--card);
+  border: 1px solid var(--rule-strong);
+  border-right-width: 0;
+  border-radius: 0;
+}
+.view-switch button:first-child {
+  border-top-left-radius: 7px;
+  border-bottom-left-radius: 7px;
+}
+.view-switch button:last-child {
+  border-right-width: 1px;
+  border-top-right-radius: 7px;
+  border-bottom-right-radius: 7px;
+}
+.view-switch button:hover {
+  background: var(--hover);
 }
 .view-switch button.on {
-  background: var(--selected);
-  color: var(--ink);
+  background: var(--ink);
+  color: var(--card);
+  border-color: var(--ink);
 }
 .folder-view-body {
   flex: 1;

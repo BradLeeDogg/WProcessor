@@ -14,6 +14,7 @@ import { createSource, extractReadable, listSources } from './services/sources'
 import { createClaim, linkSource, listClaims, listOutstanding, updateClaim } from './services/factcheck'
 import { compileToDocxBuffer, compileToEpubBuffer, compileToPdfBuffer } from './services/compile'
 import { htmlToProseMirror, markdownToProseMirror, parseScrivener } from './services/importer'
+import { getTemplate } from './services/templates'
 import { extractPlainText } from './services/documents'
 import { COMPILE_PRESETS } from '@shared/presets'
 import type { DocumentContent } from '@shared/types'
@@ -58,6 +59,19 @@ async function runChecks(): Promise<void> {
   assert(
     res.tree.some((i) => i.title.startsWith('Outline — Three-Act') || i.title.includes('Three')),
     'structure overlay applied'
+  )
+  // Per-type overlays (nonfiction / journalism / dissertation) each yield a labeled outline.
+  assert(
+    getTemplate('nonfiction-book', 'nf-argument').some((n) => n.title === 'Outline — Argument'),
+    'nonfiction overlay inserts a labeled outline'
+  )
+  assert(
+    getTemplate('journalism-short', 'feature-anatomy').some((n) => n.title === 'Outline — Feature Anatomy'),
+    'journalism overlay inserts a labeled outline'
+  )
+  assert(
+    getTemplate('dissertation', 'diss-imrad').some((n) => n.title === 'Outline — IMRaD'),
+    'dissertation overlay inserts a labeled outline'
   )
 
   const { db, paths } = projectService.requireCurrent()

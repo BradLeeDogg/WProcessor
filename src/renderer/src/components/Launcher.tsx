@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { ProjectType, RecentProject } from '@shared/types'
-import type { StructureOverlay } from '@shared/api'
+import { OVERLAYS_BY_TYPE, OVERLAY_LABELS, type StructureOverlay } from '@shared/api'
 import { useStore } from '../store/useStore'
 
 const TYPE_OPTIONS: Array<{ value: ProjectType; label: string; note: string }> = [
@@ -11,14 +11,6 @@ const TYPE_OPTIONS: Array<{ value: ProjectType; label: string; note: string }> =
   { value: 'journalism-short', label: 'Journalism — Short', note: 'Lede/nut-graf scaffold, fact-check' },
   { value: 'journalism-long', label: 'Journalism — Feature', note: 'Scene-driven, fact-check' },
   { value: 'dissertation', label: 'Dissertation', note: 'Front matter, chapters, references' }
-]
-
-const OVERLAYS: Array<{ value: StructureOverlay | ''; label: string }> = [
-  { value: '', label: 'No structure overlay' },
-  { value: 'three-act', label: 'Three-Act' },
-  { value: 'seven-point', label: 'Seven-Point' },
-  { value: 'heros-journey', label: "Hero's Journey" },
-  { value: 'save-the-cat', label: 'Save the Cat' }
 ]
 
 export default function Launcher(): JSX.Element {
@@ -68,13 +60,13 @@ export default function Launcher(): JSX.Element {
     run(async () => {
       if (!title.trim()) throw new Error('Give the project a title')
       if (!location) throw new Error('Choose where to create the project')
-      const showOverlay = type === 'novel' || type === 'novella'
+      const valid = (OVERLAYS_BY_TYPE[type] ?? []) as StructureOverlay[]
       openResult(
         await window.api.project.create({
           title: title.trim(),
           type,
           location,
-          structureOverlay: showOverlay && overlay ? overlay : null
+          structureOverlay: overlay && valid.includes(overlay) ? overlay : null
         })
       )
     })
@@ -83,7 +75,8 @@ export default function Launcher(): JSX.Element {
     setRecents(await window.api.app.removeRecentProject(path))
   }
 
-  const showOverlay = type === 'novel' || type === 'novella'
+  const overlaysForType = (OVERLAYS_BY_TYPE[type] ?? []) as StructureOverlay[]
+  const showOverlay = overlaysForType.length > 0
 
   return (
     <div className="launcher">
@@ -144,7 +137,10 @@ export default function Launcher(): JSX.Element {
                 <button
                   key={opt.value}
                   className={`type-option ${type === opt.value ? 'selected' : ''}`}
-                  onClick={() => setType(opt.value)}
+                  onClick={() => {
+                    setType(opt.value)
+                    setOverlay('')
+                  }}
                 >
                   <strong>{opt.label}</strong>
                   <em>{opt.note}</em>
@@ -157,9 +153,10 @@ export default function Launcher(): JSX.Element {
             <label className="field">
               <span>Structure overlay (optional)</span>
               <select value={overlay} onChange={(e) => setOverlay(e.target.value as StructureOverlay | '')}>
-                {OVERLAYS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
+                <option value="">No structure overlay</option>
+                {overlaysForType.map((v) => (
+                  <option key={v} value={v}>
+                    {OVERLAY_LABELS[v]}
                   </option>
                 ))}
               </select>

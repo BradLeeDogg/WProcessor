@@ -1,5 +1,5 @@
 import type { ProjectType } from '@shared/types'
-import type { StructureOverlay } from '@shared/api'
+import { OVERLAY_LABELS, type StructureOverlay } from '@shared/api'
 
 /** A node in a starter-template tree. Documents may carry placeholder body text. */
 export interface TemplateNode {
@@ -71,18 +71,76 @@ const STRUCTURE_BEATS: Record<StructureOverlay, Array<[string, string]>> = {
     ['Break into Three', 'The solution emerges.'],
     ['Finale', 'Applying the lesson; the climax.'],
     ['Final Image', 'The opposite of the opening image.']
+  ],
+  'nf-narrative': [
+    ['Opening Scene', 'Drop the reader into a vivid, concrete moment.'],
+    ['The Question', 'The driving question or tension the book pursues.'],
+    ['Background & Stakes', 'What the reader must know, and why it matters.'],
+    ['Rising Complication', 'Developments that deepen the problem.'],
+    ['Turning Point', 'The pivotal discovery or shift.'],
+    ['Climax', 'The decisive moment everything has built toward.'],
+    ['Resolution', 'How it settles.'],
+    ['Takeaway', 'What it all means for the reader.']
+  ],
+  'nf-argument': [
+    ['Thesis', 'The central claim, in one sentence.'],
+    ['Why Now', 'The urgency — why this argument, this moment.'],
+    ['The Problem', 'The status quo or assumption you are challenging.'],
+    ['Evidence & Cases', 'Data, stories, and examples that carry the claim.'],
+    ['Counterarguments', 'Steelman the other side, then answer it.'],
+    ['Synthesis', 'Bring the threads into a coherent whole.'],
+    ['Call to Action', 'What the reader should now do or believe.']
+  ],
+  'nf-prescriptive': [
+    ['The Promise', 'The transformation the book offers.'],
+    ['The Problem', "What is keeping the reader stuck."],
+    ['The Framework', 'Your core model or guiding principles.'],
+    ['The Steps', 'The method, broken into ordered moves.'],
+    ['Examples', 'Worked cases that prove the method.'],
+    ['Pitfalls', 'Common mistakes and how to avoid them.'],
+    ['Action Plan', "The reader's concrete next steps."]
+  ],
+  'news-inverted-pyramid': [
+    ['Lede', 'The who/what/when/where/why in a sentence or two.'],
+    ['Key Details', 'The most newsworthy facts, in order.'],
+    ['Context', 'Background that frames the news.'],
+    ['Supporting Quotes', 'Attribution and reaction.'],
+    ['Minor Details', 'Least essential material — safe to cut from the bottom.']
+  ],
+  'feature-anatomy': [
+    ['Lede', 'A scene or anecdote that pulls the reader in.'],
+    ['Nut Graf', 'Why this story, why now — the point of it.'],
+    ['Context', 'Background and stakes.'],
+    ['Body', 'The reporting, in scenes or movements.'],
+    ['Voices', 'Key quotes and characters.'],
+    ['Counterpoint', 'Tension, complication, the other view.'],
+    ['Kicker', 'A closing line that resonates.']
+  ],
+  'diss-standard': [
+    ['Abstract', 'A concise summary of the whole.'],
+    ['Introduction', 'Problem, aims, and significance.'],
+    ['Literature Review', "What is known, and the gap you fill."],
+    ['Methodology', 'How you investigated.'],
+    ['Results', 'What you found.'],
+    ['Discussion', 'What it means; limitations.'],
+    ['Conclusion', 'Contributions and future work.'],
+    ['References', 'Works cited.'],
+    ['Appendices', 'Supplementary material.']
+  ],
+  'diss-imrad': [
+    ['Introduction', 'Question and rationale.'],
+    ['Methods', 'Design and procedure.'],
+    ['Results', 'Findings, without interpretation.'],
+    ['Discussion', 'Interpretation and implications.'],
+    ['References', 'Works cited.']
   ]
 }
 
 function overlayFolder(overlay: StructureOverlay): TemplateNode {
-  const label = overlay
-    .split('-')
-    .map((w) => w[0]!.toUpperCase() + w.slice(1))
-    .join(' ')
   return {
     type: 'folder',
-    title: `Outline — ${label}`,
-    synopsis: 'Beat placeholders. Keep, rearrange, or discard.',
+    title: `Outline — ${OVERLAY_LABELS[overlay]}`,
+    synopsis: 'Structural placeholders. Keep, rearrange, or discard.',
     children: STRUCTURE_BEATS[overlay].map(([title, synopsis]) => ({
       type: 'document',
       title,
@@ -91,7 +149,7 @@ function overlayFolder(overlay: StructureOverlay): TemplateNode {
   }
 }
 
-function novelTemplate(novella: boolean, overlay?: StructureOverlay | null): TemplateNode[] {
+function novelTemplate(novella: boolean): TemplateNode[] {
   const nodes: TemplateNode[] = [
     {
       type: 'folder',
@@ -125,7 +183,6 @@ function novelTemplate(novella: boolean, overlay?: StructureOverlay | null): Tem
     // Full novels get a notes doc for series/worldbuilding scope.
     nodes.push({ type: 'document', title: 'Notes', body: [''] })
   }
-  if (overlay) nodes.splice(1, 0, overlayFolder(overlay))
   return nodes
 }
 
@@ -254,12 +311,12 @@ function dissertationTemplate(): TemplateNode[] {
   ]
 }
 
-export function getTemplate(type: ProjectType, overlay?: StructureOverlay | null): TemplateNode[] {
+function baseTemplate(type: ProjectType): TemplateNode[] {
   switch (type) {
     case 'novel':
-      return novelTemplate(false, overlay)
+      return novelTemplate(false)
     case 'novella':
-      return novelTemplate(true, overlay)
+      return novelTemplate(true)
     case 'short-story':
       return shortStoryTemplate()
     case 'nonfiction-book':
@@ -273,4 +330,13 @@ export function getTemplate(type: ProjectType, overlay?: StructureOverlay | null
     default:
       return shortStoryTemplate()
   }
+}
+
+export function getTemplate(type: ProjectType, overlay?: StructureOverlay | null): TemplateNode[] {
+  const nodes = baseTemplate(type)
+  // Drop the optional planning outline near the top, beneath the first folder.
+  if (overlay && STRUCTURE_BEATS[overlay]) {
+    nodes.splice(Math.min(1, nodes.length), 0, overlayFolder(overlay))
+  }
+  return nodes
 }
