@@ -14,6 +14,10 @@ const w = window as unknown as {
 w.__wpOpenResult = (r) => useStore.getState().openResult(r)
 w.__wpStore = useStore
 
+// Native-menu items dispatch to the in-renderer command bus.
+import { runCommand, type AppCommand } from './lib/commands'
+window.api.onMenuCommand((cmd) => runCommand(cmd as AppCommand))
+
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <App />

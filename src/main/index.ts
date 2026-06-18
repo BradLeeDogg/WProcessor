@@ -1,8 +1,68 @@
-import { app, shell, BrowserWindow, Menu, MenuItem } from 'electron'
+import { app, shell, BrowserWindow, Menu, MenuItem, type MenuItemConstructorOptions } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerIpc } from './ipc'
 import { projectService } from './services/project'
+
+/** Native menu — discoverability + global accelerators. Items send high-level
+ *  commands to the renderer's command bus; standard roles keep undo/copy/paste. */
+function buildAppMenu(win: BrowserWindow): void {
+  const isMac = process.platform === 'darwin'
+  const send = (cmd: string) => (): void => win.webContents.send('menu-command', cmd)
+  const template: MenuItemConstructorOptions[] = [
+    ...(isMac ? [{ role: 'appMenu' as const }] : []),
+    {
+      label: 'File',
+      submenu: [
+        { label: 'New Document', accelerator: 'CmdOrCtrl+N', click: send('new-doc') },
+        { label: 'New Folder', accelerator: 'CmdOrCtrl+Shift+N', click: send('new-folder') },
+        { type: 'separator' },
+        { label: 'Compile…', accelerator: 'CmdOrCtrl+E', click: send('compile') },
+        { type: 'separator' },
+        isMac ? { role: 'close' } : { role: 'quit' }
+      ]
+    },
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'undo' },
+        { role: 'redo' },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' },
+        { role: 'selectAll' },
+        { type: 'separator' },
+        { label: 'Find & Replace…', accelerator: 'CmdOrCtrl+F', click: send('find') }
+      ]
+    },
+    {
+      label: 'Document',
+      submenu: [
+        { label: 'Split at Cursor', accelerator: 'CmdOrCtrl+Shift+K', click: send('split-doc') },
+        { label: 'Merge with Previous', accelerator: 'CmdOrCtrl+Shift+M', click: send('merge-docs') },
+        { type: 'separator' },
+        { label: 'Snapshots…', accelerator: 'CmdOrCtrl+Shift+S', click: send('snapshot') }
+      ]
+    },
+    {
+      label: 'View',
+      submenu: [
+        { label: 'Go to…', accelerator: 'CmdOrCtrl+P', click: send('quick-open') },
+        { type: 'separator' },
+        { label: 'Scrivenings', accelerator: 'CmdOrCtrl+1', click: send('view-scrivenings') },
+        { label: 'Corkboard', accelerator: 'CmdOrCtrl+2', click: send('view-corkboard') },
+        { label: 'Outliner', accelerator: 'CmdOrCtrl+3', click: send('view-outliner') },
+        { type: 'separator' },
+        { label: 'Split View', accelerator: 'CmdOrCtrl+\\', click: send('split-view') },
+        { label: 'Composition Mode', accelerator: 'CmdOrCtrl+Shift+Return', click: send('compose') },
+        { type: 'separator' },
+        { role: 'togglefullscreen' }
+      ]
+    }
+  ]
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template))
+}
 
 function createWindow(): BrowserWindow {
   const window = new BrowserWindow({
@@ -13,7 +73,7 @@ function createWindow(): BrowserWindow {
     show: false,
     backgroundColor: '#f7f5ef', // calm "paper" tone so first paint isn't a white flash
     title: 'WProcessor',
-    autoHideMenuBar: true,
+    autoHideMenuBar: false,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
@@ -40,6 +100,8 @@ function createWindow(): BrowserWindow {
     )
     menu.popup()
   })
+
+  buildAppMenu(window)
 
   if (process.env['WP_SMOKE']) {
     // Surface renderer crashes/errors during a headless boot test.

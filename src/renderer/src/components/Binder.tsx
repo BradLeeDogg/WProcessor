@@ -20,6 +20,7 @@ import { CSS } from '@dnd-kit/utilities'
 import type { BinderItem } from '@shared/types'
 import { useStore } from '../store/useStore'
 import { flattenVisible, getProjection, toMove, INDENT_WIDTH, type FlatNode } from '../lib/tree'
+import { onCommand } from '../lib/commands'
 
 const BASE_PAD = 8
 
@@ -113,6 +114,14 @@ export default function Binder(): JSX.Element {
     await window.api.binder.setCollapsed(item.id, !item.collapsed)
     setTree(await window.api.binder.list())
   }
+
+  // Menu/shortcut commands for binder actions (ref keeps closures fresh).
+  const cmdRef = useRef<(cmd: string) => void>(() => {})
+  cmdRef.current = (cmd) => {
+    if (cmd === 'new-doc') void addItem('document')
+    else if (cmd === 'new-folder') void addItem('folder')
+  }
+  useEffect(() => onCommand((cmd) => cmdRef.current(cmd)), [])
 
   // Roving focus: keep DOM focus on the selected row for keyboard nav + AT.
   const rowRefs = useRef<Map<string, HTMLDivElement>>(new Map())

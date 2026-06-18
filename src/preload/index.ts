@@ -5,6 +5,9 @@ import type { WProcessorAPI } from '@shared/api'
 // The single, typed surface between renderer and main. The renderer never
 // touches the filesystem, the database, or Node directly — only this bridge.
 const api: WProcessorAPI = {
+  onMenuCommand: (cb) => {
+    ipcRenderer.on('menu-command', (_e, cmd: string) => cb(cmd))
+  },
   app: {
     health: () => ipcRenderer.invoke('app:health'),
     getRecentProjects: () => ipcRenderer.invoke('app:getRecentProjects'),

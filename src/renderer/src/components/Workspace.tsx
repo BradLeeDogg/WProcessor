@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 import { useStore } from '../store/useStore'
 import { allDocuments } from '../lib/tree'
-import { runCommand } from '../lib/commands'
+import { onCommand } from '../lib/commands'
 import Binder from './Binder'
 import Editor from './Editor'
 import SplitPane from './SplitPane'
@@ -62,22 +62,38 @@ export default function Workspace(): JSX.Element {
   const [showQuickOpen, setShowQuickOpen] = useState(false)
   const [backupMsg, setBackupMsg] = useState<string | null>(null)
 
-  // Global shortcuts (ignored while composing).
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent): void => {
-      if (!(e.ctrlKey || e.metaKey) || useStore.getState().composition) return
-      const k = e.key.toLowerCase()
-      if (k === 'p') {
-        e.preventDefault()
+  // Workspace-owned menu/shortcut commands (ref keeps handler closures fresh).
+  const cmdRef = useRef<(cmd: string) => void>(() => {})
+  cmdRef.current = (cmd) => {
+    if (useStore.getState().composition && cmd !== 'compose') return
+    switch (cmd) {
+      case 'quick-open':
         setShowQuickOpen(true)
-      } else if (k === 'f') {
-        e.preventDefault()
-        runCommand('find')
-      }
+        break
+      case 'compose':
+        setComposition(true)
+        break
+      case 'compile':
+        setShowCompile(true)
+        break
+      case 'snapshot':
+        setShowSnapshots(true)
+        break
+      case 'split-view':
+        toggleSplit()
+        break
+      case 'view-corkboard':
+        openCorkboard()
+        break
+      case 'view-outliner':
+        setFolderView('outliner')
+        break
+      case 'view-scrivenings':
+        setFolderView('scrivenings')
+        break
     }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [])
+  }
+  useEffect(() => onCommand((cmd) => cmdRef.current(cmd)), [])
 
   // Keep Chromium's spell-check dictionary in sync with the project's dialect.
   useEffect(() => {
