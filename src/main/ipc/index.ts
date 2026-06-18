@@ -173,6 +173,10 @@ export function registerIpc(): void {
     for (const t of binder.listTrash(db)) await purge(t.id)
     return []
   })
+  ipcMain.handle('binder:mergeWithPrevious', (_e, id: string) => {
+    const { db, paths } = projectService.requireCurrent()
+    return binder.mergeWithPrevious(db, paths.root, id)
+  })
 
   ipcMain.handle('binder:move', (_e, input: BinderMoveInput) => {
     const { db } = projectService.requireCurrent()

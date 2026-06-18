@@ -19,7 +19,7 @@ import { onCommand } from '../lib/commands'
 import { mergeDocs } from '@shared/docops'
 import type { ProofOptions } from '@shared/proofreader'
 import { listComments, listFootnotes } from '../editor/annotations'
-import { playKeyClick } from '../lib/typewriter'
+import { playKeyClick, playReturn } from '../lib/typewriter'
 import AnnotationsPanel from './AnnotationsPanel'
 
 const EMPTY_DOC: JSONContent = { type: 'doc', content: [{ type: 'paragraph' }] }
@@ -120,9 +120,11 @@ export default function DocumentEditor({
     editorProps: {
       handleDOMEvents: {
         keydown: (_view, event) => {
-          // Subtle keystroke sound when enabled (typing characters only).
-          if (event.key.length === 1 && useStore.getState().meta?.settings.typewriterSound) {
-            playKeyClick()
+          // Mechanical keystroke sound when enabled; Enter rings the bell.
+          if (useStore.getState().meta?.settings.typewriterSound) {
+            if (event.key === 'Enter') playReturn()
+            else if (event.key.length === 1 || event.key === 'Backspace' || event.key === 'Delete')
+              playKeyClick()
           }
           return false
         }
@@ -499,12 +501,6 @@ export default function DocumentEditor({
           </button>
           {flash && <span className="fmt-flash muted">{flash}</span>}
           <span className="fmt-spacer" />
-          <button title="Split into a new document at the cursor" onClick={() => void splitDoc()}>
-            Split
-          </button>
-          <button title="Merge this document into the one above it" onClick={() => void mergeUp()}>
-            Merge↑
-          </button>
           <button title="Find &amp; replace (Ctrl/⌘ F)" onClick={openFind}>
             ⌕
           </button>

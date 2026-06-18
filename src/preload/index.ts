@@ -36,6 +36,7 @@ const api: WProcessorAPI = {
     listTrash: () => ipcRenderer.invoke('binder:listTrash'),
     purge: (id) => ipcRenderer.invoke('binder:purge', id),
     emptyTrash: () => ipcRenderer.invoke('binder:emptyTrash'),
+    mergeWithPrevious: (id) => ipcRenderer.invoke('binder:mergeWithPrevious', id),
     move: (input) => ipcRenderer.invoke('binder:move', input),
     applyOverlay: (overlay) => ipcRenderer.invoke('binder:applyOverlay', overlay)
   },

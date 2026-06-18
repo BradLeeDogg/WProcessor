@@ -193,6 +193,8 @@ export interface WProcessorAPI {
     purge(id: string): Promise<BinderItem[]>
     /** Permanently delete everything in the Trash. */
     emptyTrash(): Promise<BinderItem[]>
+    /** Merge a document into the previous sibling document; trashes the source. */
+    mergeWithPrevious(id: string): Promise<{ tree: BinderItem[]; survivingId: string } | null>
     move(input: BinderMoveInput): Promise<BinderItem[]>
     applyOverlay(overlay: StructureOverlay): Promise<{ folderId: string; tree: BinderItem[] }>
   }

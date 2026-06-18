@@ -20,7 +20,7 @@ import { CSS } from '@dnd-kit/utilities'
 import type { BinderItem } from '@shared/types'
 import { useStore } from '../store/useStore'
 import { flattenVisible, getProjection, toMove, INDENT_WIDTH, type FlatNode } from '../lib/tree'
-import { onCommand } from '../lib/commands'
+import { onCommand, runCommand } from '../lib/commands'
 
 const BASE_PAD = 8
 
@@ -47,6 +47,30 @@ export default function Binder(): JSX.Element {
   const [renamingId, setRenamingId] = useState<string | null>(null)
   const [showTrash, setShowTrash] = useState(false)
   const [trash, setTrash] = useState<BinderItem[]>([])
+  const [menu, setMenu] = useState<{ x: number; y: number; item: FlatNode; wasOpen: boolean } | null>(
+    null
+  )
+
+  const closeMenu = (): void => setMenu(null)
+  const openMenu = (node: FlatNode, e: React.MouseEvent): void => {
+    e.preventDefault()
+    const wasOpen = node.id === selectedId
+    select(node.id)
+    setMenu({ x: e.clientX, y: e.clientY, item: node, wasOpen })
+  }
+  const hasPrevDoc = (item: FlatNode): boolean => {
+    const sibs = tree.filter((t) => t.parentId === item.parentId).sort((a, b) => a.position - b.position)
+    const prev = sibs[sibs.findIndex((s) => s.id === item.id) - 1]
+    return !!prev && prev.type === 'document'
+  }
+  const mergeCtx = async (item: FlatNode): Promise<void> => {
+    closeMenu()
+    const r = await window.api.binder.mergeWithPrevious(item.id)
+    if (r) {
+      setTree(r.tree)
+      select(r.survivingId)
+    }
+  }
 
   const openTrash = async (): Promise<void> => {
     setTrash(await window.api.binder.listTrash())
@@ -280,6 +304,7 @@ export default function Binder(): JSX.Element {
                   else rowRefs.current.delete(node.id)
                 }}
                 onSelect={() => select(node.id)}
+                onContextMenu={(e) => openMenu(node, e)}
                 onToggle={() => toggleCollapse(node)}
                 onStartRename={() => setRenamingId(node.id)}
                 onCommitRename={(title) => commitRename(node.id, title)}
@@ -293,6 +318,68 @@ export default function Binder(): JSX.Element {
         </DndContext>
         {flattened.length === 0 && <p className="muted binder-empty">No items yet.</p>}
       </div>
+
+      {menu && (
+        <>
+          <div
+            className="ctx-backdrop"
+            onClick={closeMenu}
+            onContextMenu={(e) => {
+              e.preventDefault()
+              closeMenu()
+            }}
+          />
+          <div className="ctx-menu" style={{ left: menu.x, top: menu.y }}>
+            <button
+              onClick={() => {
+                void addItem('document')
+                closeMenu()
+              }}
+            >
+              New Document
+            </button>
+            <button
+              onClick={() => {
+                void addItem('folder')
+                closeMenu()
+              }}
+            >
+              New Folder
+            </button>
+            <button
+              onClick={() => {
+                setRenamingId(menu.item.id)
+                closeMenu()
+              }}
+            >
+              Rename
+            </button>
+            {menu.item.type === 'document' && menu.wasOpen && (
+              <button
+                onClick={() => {
+                  closeMenu()
+                  runCommand('split-doc')
+                }}
+              >
+                Split at Cursor
+              </button>
+            )}
+            {menu.item.type === 'document' && hasPrevDoc(menu.item) && (
+              <button onClick={() => void mergeCtx(menu.item)}>Merge with Previous</button>
+            )}
+            <div className="ctx-sep" />
+            <button
+              className="danger"
+              onClick={() => {
+                void removeItem(menu.item)
+                closeMenu()
+              }}
+            >
+              Move to Trash
+            </button>
+          </div>
+        </>
+      )}
 
       {showTrash && (
         <div className="modal-backdrop" onClick={() => setShowTrash(false)}>
@@ -340,6 +427,7 @@ interface RowProps {
   renaming: boolean
   onRef: (el: HTMLDivElement | null) => void
   onSelect: () => void
+  onContextMenu: (e: React.MouseEvent) => void
   onToggle: () => void
   onStartRename: () => void
   onCommitRename: (title: string) => void
@@ -374,6 +462,7 @@ function BinderRow(props: RowProps): JSX.Element {
       aria-expanded={node.type === 'folder' ? !node.collapsed : undefined}
       tabIndex={selected ? 0 : -1}
       onClick={props.onSelect}
+      onContextMenu={props.onContextMenu}
       {...listeners}
     >
       {node.type === 'folder' ? (

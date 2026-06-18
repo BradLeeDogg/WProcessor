@@ -5,7 +5,7 @@ import { join } from 'path'
 import { projectService } from './services/project'
 import { createItem, createItemFull, listBinder, moveItem, removeItem, setNotes } from './services/binder'
 import * as meta from './services/metadata'
-import { countWords, emptyDoc, readDocument, writeDocument } from './services/documents'
+import { countWords, docFromParagraphs, emptyDoc, readDocument, writeDocument } from './services/documents'
 import { createSnapshot, listSnapshots, restoreSnapshot } from './services/snapshots'
 import { createBackup } from './services/backups'
 import { searchProject } from './services/search'
@@ -26,7 +26,7 @@ import { AME_TO_BRE, BRE_TO_AME } from '@shared/dialect'
 import { findRanges } from '@shared/find'
 import { mergeDocs, docLines } from '@shared/docops'
 import { diffLines } from '@shared/diff'
-import { trashItem, restoreItem, listTrash } from './services/binder'
+import { trashItem, restoreItem, listTrash, mergeWithPrevious } from './services/binder'
 import { htmlToProseMirror, markdownToProseMirror, parseScrivener } from './services/importer'
 import { getTemplate, STRUCTURE_BEATS } from './services/templates'
 import {
@@ -567,6 +567,21 @@ async function runChecks(): Promise<void> {
     restoreItem(bdb, trashy.id)
     assert(listBinder(bdb).some((i) => i.id === trashy.id), 'restore brings the item back')
     assert(!listTrash(bdb).some((i) => i.id === trashy.id), 'restored item leaves the Trash')
+  }
+
+  // Binder-level "merge with previous" (the right-click menu action).
+  {
+    const { db: mdb, paths: mp } = projectService.requireCurrent()
+    const first = createItem(mdb, { type: 'document', title: 'First', parentId: null })
+    const second = createItem(mdb, { type: 'document', title: 'Second', parentId: null })
+    await writeDocument(mp.root, first.id, docFromParagraphs(['Alpha']))
+    await writeDocument(mp.root, second.id, docFromParagraphs(['Beta']))
+    const res = await mergeWithPrevious(mdb, mp.root, second.id)
+    assert(res?.survivingId === first.id, 'merge folds into the previous document')
+    assert(!listBinder(mdb).some((i) => i.id === second.id), 'merged-away document leaves the tree')
+    const combined = await readDocument(mp.root, first.id)
+    const txt = combined ? extractPlainText(combined) : ''
+    assert(txt.includes('Alpha') && txt.includes('Beta'), 'previous document gains the merged content')
   }
 
   const fromHtml = htmlToProseMirror('<h1>Heading</h1><p>Hello <strong>world</strong></p>')

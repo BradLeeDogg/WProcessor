@@ -1,7 +1,10 @@
 import { randomUUID } from 'crypto'
 import type { BinderItem } from '@shared/types'
 import type { BinderCreateInput, BinderMoveInput } from '@shared/api'
+import { DOCUMENT_CONTENT_VERSION } from '@shared/types'
+import { mergeDocs } from '@shared/docops'
 import { type DB, listBinder, rowToBinderItem } from './db'
+import { countWords, readDocument, writeDocument } from './documents'
 
 function now(): number {
   return Date.now()
@@ -143,6 +146,34 @@ export function restoreItem(db: DB, id: string): void {
     now(),
     id
   )
+}
+
+/**
+ * Merge a document into the previous sibling document (whole-document), then
+ * trash the now-merged one. Returns the live tree + the surviving doc's id.
+ */
+export async function mergeWithPrevious(
+  db: DB,
+  root: string,
+  id: string
+): Promise<{ tree: BinderItem[]; survivingId: string } | null> {
+  const all = listBinder(db)
+  const item = all.find((t) => t.id === id)
+  if (!item || item.type !== 'document') return null
+  const sibs = all.filter((t) => t.parentId === item.parentId).sort((a, b) => a.position - b.position)
+  const prev = sibs[sibs.findIndex((s) => s.id === id) - 1]
+  if (!prev || prev.type !== 'document') return null
+
+  const [prevC, curC] = await Promise.all([readDocument(root, prev.id), readDocument(root, id)])
+  const merged = mergeDocs(
+    prevC?.doc ?? { type: 'doc', content: [] },
+    curC?.doc ?? { type: 'doc', content: [] }
+  )
+  const content = { version: DOCUMENT_CONTENT_VERSION, doc: merged }
+  await writeDocument(root, prev.id, content)
+  setWordCount(db, prev.id, countWords(content))
+  trashItem(db, id)
+  return { tree: listBinder(db), survivingId: prev.id }
 }
 
 /** Trashed items (the flagged roots), newest first. */
