@@ -43,6 +43,17 @@ jobs:
             release/*.zip
           if-no-files-found: error
 
+      # Drop any stale assets from a previous name (e.g. WProcessor-*) so the
+      # release only ever lists the current Foolscap artifacts.
+      - name: Remove stale release assets
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: pwsh
+        run: |
+          $names = gh release view win-latest --json assets -q ".assets[].name"
+          foreach ($n in $names) { if ($n -like "WProcessor*") { gh release delete-asset win-latest "$n" -y } }
+
       # Also publish to a Release so there's a stable, click-to-download link.
       - name: Publish to a Release
         continue-on-error: true
