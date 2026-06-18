@@ -16,6 +16,7 @@ import { Deletion, Insertion, TrackChanges, hasTrackedChanges } from '../editor/
 import { Proofreader, getProofIssues } from '../editor/proofreader'
 import { FindReplace, getFindState } from '../editor/findreplace'
 import { onCommand } from '../lib/commands'
+import { mergeDocs } from '@shared/docops'
 import type { ProofOptions } from '@shared/proofreader'
 import { listComments, listFootnotes } from '../editor/annotations'
 import { playKeyClick } from '../lib/typewriter'
@@ -346,13 +347,63 @@ export default function DocumentEditor({
     editor?.commands.clearFind()
     editor?.commands.focus()
   }
+
+  // --- split / merge documents ---
+  const splitDoc = async (): Promise<void> => {
+    if (!editor) return
+    const { from } = editor.state.selection
+    const doc = editor.state.doc
+    const preJSON = doc.cut(0, from).toJSON()
+    const postJSON = doc.cut(from).toJSON()
+    const tree = useStore.getState().tree
+    const item = tree.find((t) => t.id === docId)
+    if (!item) return
+    const sibs = tree.filter((t) => t.parentId === item.parentId).sort((a, b) => a.position - b.position)
+    const idx = sibs.findIndex((s) => s.id === docId)
+    const { item: newItem, tree: nextTree } = await window.api.binder.create({
+      type: 'document',
+      title: `${item.title} (cont.)`,
+      parentId: item.parentId,
+      index: idx + 1
+    })
+    await window.api.document.write(newItem.id, {
+      version: DOCUMENT_CONTENT_VERSION,
+      doc: postJSON as never,
+      mode: spModeRef.current ? 'screenplay' : 'prose'
+    })
+    editor.commands.setContent(preJSON as JSONContent, true) // emit → autosaves the first half
+    useStore.getState().setTree(nextTree)
+  }
+  const mergeUp = async (): Promise<void> => {
+    if (!editor) return
+    const tree = useStore.getState().tree
+    const item = tree.find((t) => t.id === docId)
+    if (!item) return
+    const sibs = tree.filter((t) => t.parentId === item.parentId).sort((a, b) => a.position - b.position)
+    const prev = sibs[sibs.findIndex((s) => s.id === docId) - 1]
+    if (!prev || prev.type !== 'document') {
+      window.alert('No previous document to merge into.')
+      return
+    }
+    const prevContent = await window.api.document.read(prev.id)
+    const merged = mergeDocs(
+      (prevContent?.doc as ProseMirrorNode) ?? { type: 'doc', content: [] },
+      editor.getJSON() as unknown as ProseMirrorNode
+    )
+    await window.api.document.write(prev.id, { version: DOCUMENT_CONTENT_VERSION, doc: merged })
+    useStore.getState().setTree(await window.api.binder.remove(item.id))
+    useStore.getState().select(prev.id)
+  }
+
   useEffect(() => {
     if (!active) return
     return onCommand((cmd) => {
       if (cmd === 'find') openFind()
+      else if (cmd === 'split-doc') void splitDoc()
+      else if (cmd === 'merge-docs') void mergeUp()
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, editor, findQuery, caseSensitive])
+  }, [active, editor, docId, findQuery, caseSensitive])
 
   const addComment = (): void => {
     if (!editor || editor.state.selection.empty) return
@@ -439,6 +490,12 @@ export default function DocumentEditor({
             ❝
           </button>
           <span className="fmt-spacer" />
+          <button title="Split into a new document at the cursor" onClick={() => void splitDoc()}>
+            Split
+          </button>
+          <button title="Merge this document into the one above it" onClick={() => void mergeUp()}>
+            Merge↑
+          </button>
           <button title="Find &amp; replace (Ctrl/⌘ F)" onClick={openFind}>
             ⌕
           </button>

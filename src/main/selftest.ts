@@ -24,6 +24,7 @@ import { acceptAllChanges, hasTrackedChanges, rejectAllChanges } from '@shared/t
 import { proofread, type Issue } from '@shared/proofreader'
 import { AME_TO_BRE, BRE_TO_AME } from '@shared/dialect'
 import { findRanges } from '@shared/find'
+import { mergeDocs } from '@shared/docops'
 import { htmlToProseMirror, markdownToProseMirror, parseScrivener } from './services/importer'
 import { getTemplate, STRUCTURE_BEATS } from './services/templates'
 import {
@@ -535,6 +536,15 @@ async function runChecks(): Promise<void> {
   )
   assert(findRanges('aaaa', 'aa', false).length === 2, 'findRanges is non-overlapping')
   assert(findRanges('abc', '', false).length === 0, 'findRanges ignores empty query')
+
+  // Merge documents (pure concat used by "merge with previous").
+  {
+    const a = { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'one' }] }] }
+    const b = { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'two' }] }] }
+    const merged = mergeDocs(a, b)
+    assert(merged.content!.length === 2, 'mergeDocs concatenates block content')
+    assert(extractPlainText({ version: 1, doc: merged }).includes('one'), 'merged doc keeps first content')
+  }
 
   const fromHtml = htmlToProseMirror('<h1>Heading</h1><p>Hello <strong>world</strong></p>')
   assert(
