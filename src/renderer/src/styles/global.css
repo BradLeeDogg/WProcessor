@@ -673,6 +673,10 @@ fieldset.field {
 .fmt-spacer {
   margin-left: auto;
 }
+.fmt-flash {
+  font-size: 0.74rem;
+  margin-left: 8px;
+}
 
 /* find & replace bar */
 .find-bar {

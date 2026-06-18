@@ -86,7 +86,12 @@ export default function DocumentEditor({
   const [replaceText, setReplaceText] = useState('')
   const [caseSensitive, setCaseSensitive] = useState(false)
   const [findInfo, setFindInfo] = useState({ count: 0, index: 0 })
+  const [flash, setFlash] = useState<string | null>(null)
   const findInputRef = useRef<HTMLInputElement>(null)
+  const flashMsg = (m: string): void => {
+    setFlash(m)
+    setTimeout(() => setFlash(null), 2500)
+  }
   const setInserter = useStore((s) => s.setInserter)
   const setProof = useStore((s) => s.setProof)
   const english = useStore((s) => s.meta?.settings.english)
@@ -373,6 +378,8 @@ export default function DocumentEditor({
     })
     editor.commands.setContent(preJSON as JSONContent, true) // emit → autosaves the first half
     useStore.getState().setTree(nextTree)
+    editor.commands.focus()
+    flashMsg('Split off a new document below.')
   }
   const mergeUp = async (): Promise<void> => {
     if (!editor) return
@@ -382,7 +389,8 @@ export default function DocumentEditor({
     const sibs = tree.filter((t) => t.parentId === item.parentId).sort((a, b) => a.position - b.position)
     const prev = sibs[sibs.findIndex((s) => s.id === docId) - 1]
     if (!prev || prev.type !== 'document') {
-      window.alert('No previous document to merge into.')
+      flashMsg('No earlier document to merge into.')
+      editor.commands.focus()
       return
     }
     const prevContent = await window.api.document.read(prev.id)
@@ -455,7 +463,7 @@ export default function DocumentEditor({
   return (
     <div className="editor-pane">
       {bubble}
-      {editor && (
+      {editor && !hideNotes && (
         <div className="format-toolbar">
           <button className={fmtActive('paragraph')} title="Body text" onClick={() => editor.chain().focus().setParagraph().run()}>
             ¶
@@ -489,6 +497,7 @@ export default function DocumentEditor({
           <button className={fmtActive('blockquote')} title="Block quote" onClick={() => editor.chain().focus().toggleBlockquote().run()}>
             ❝
           </button>
+          {flash && <span className="fmt-flash muted">{flash}</span>}
           <span className="fmt-spacer" />
           <button title="Split into a new document at the cursor" onClick={() => void splitDoc()}>
             Split
@@ -501,7 +510,7 @@ export default function DocumentEditor({
           </button>
         </div>
       )}
-      {findOpen && editor && (
+      {findOpen && editor && !hideNotes && (
         <div className="find-bar">
           <input
             ref={findInputRef}
