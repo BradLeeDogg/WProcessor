@@ -28,6 +28,7 @@ import { AME_TO_BRE, BRE_TO_AME } from '@shared/dialect'
 import { findRanges } from '@shared/find'
 import { mergeDocs, docLines } from '@shared/docops'
 import { diffLines } from '@shared/diff'
+import { classifySourceFile } from '@shared/sourcefile'
 import { trashItem, restoreItem, listTrash, mergeWithPrevious } from './services/binder'
 import { htmlToProseMirror, markdownToProseMirror, parseScrivener } from './services/importer'
 import { getTemplate, STRUCTURE_BEATS } from './services/templates'
@@ -571,6 +572,12 @@ async function runChecks(): Promise<void> {
   )
   assert(findRanges('aaaa', 'aa', false).length === 2, 'findRanges is non-overlapping')
   assert(findRanges('abc', '', false).length === 0, 'findRanges ignores empty query')
+
+  // Research viewer: source file classification.
+  assert(classifySourceFile('research/x.html') === 'html', 'classify html')
+  assert(classifySourceFile('assets/x.PNG') === 'image', 'classify image (case-insensitive)')
+  assert(classifySourceFile('assets/x.pdf') === 'pdf', 'classify pdf')
+  assert(classifySourceFile(null) === 'meta', 'classify metadata-only source')
 
   // Merge documents (pure concat used by "merge with previous").
   {

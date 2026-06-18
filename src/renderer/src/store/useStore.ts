@@ -37,6 +37,13 @@ interface AppState {
   /** Insert content (plain text or HTML) at the cursor of the last-focused editor. */
   inserter: ((content: string) => boolean) | null
   setInserter: (fn: ((content: string) => boolean) | null) => void
+  /** Insert a footnote at the cursor of the last-focused editor. */
+  footnoteInserter: ((text: string) => boolean) | null
+  setFootnoteInserter: (fn: ((text: string) => boolean) | null) => void
+  /** The source currently open in the Research viewer (null = closed). */
+  viewSourceId: string | null
+  viewSource: (id: string) => void
+  closeViewSource: () => void
   /** Proofreading issues for the active document + fix/jump bridges to its editor. */
   proofIssues: DocIssue[]
   proofApply: ((from: number, to: number, replacement: string) => void) | null
@@ -88,6 +95,8 @@ export const useStore = create<AppState>((set) => ({
   docWordCount: 0,
   selectionWordCount: 0,
   inserter: null,
+  footnoteInserter: null,
+  viewSourceId: null,
   proofIssues: [],
   proofApply: null,
   proofFocus: null,
@@ -132,6 +141,9 @@ export const useStore = create<AppState>((set) => ({
   setDocWordCount: (n) => set({ docWordCount: n }),
   setSelectionWordCount: (n) => set({ selectionWordCount: n }),
   setInserter: (fn) => set({ inserter: fn }),
+  setFootnoteInserter: (fn) => set({ footnoteInserter: fn }),
+  viewSource: (id) => set({ viewSourceId: id }),
+  closeViewSource: () => set({ viewSourceId: null }),
   setProof: (issues, apply, focus) =>
     set({ proofIssues: issues, proofApply: apply, proofFocus: focus }),
   setSplit: (id) => set({ splitId: id }),

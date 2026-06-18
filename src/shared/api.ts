@@ -40,6 +40,16 @@ export type SourcePatch = Partial<
   Pick<Source, 'title' | 'url' | 'locator' | 'notes' | 'author' | 'container' | 'publisher' | 'year'>
 >
 
+/** A source loaded for the Research viewer. */
+export interface SourceContent {
+  type: 'html' | 'image' | 'pdf' | 'file' | 'meta'
+  source: Source
+  /** Sanitized article HTML (type 'html'). */
+  html?: string
+  /** Data URL for inline display (type 'image'). */
+  dataUrl?: string
+}
+
 
 export type ClaimPatch = { text?: string; status?: ClaimStatus; needsQuoteCheck?: boolean }
 
@@ -246,6 +256,10 @@ export interface FoolscapAPI {
     remove(id: string): Promise<Source[]>
     /** Edit a source's fields (title, url, locator, notes, citation metadata). */
     update(id: string, patch: SourcePatch): Promise<Source | null>
+    /** Load a source for the Research viewer (inline html/image, or metadata). */
+    open(id: string): Promise<SourceContent | null>
+    /** Open a stored source file in the OS default app (PDFs, etc.). */
+    openExternal(id: string): Promise<void>
   }
   clipboard: {
     /** Write rich content so a paste keeps italics (into the editor or Word). */

@@ -83,7 +83,9 @@ const api: FoolscapAPI = {
     createManual: (input) => ipcRenderer.invoke('source:createManual', input),
     importFile: () => ipcRenderer.invoke('source:importFile'),
     remove: (id) => ipcRenderer.invoke('source:remove', id),
-    update: (id, patch) => ipcRenderer.invoke('source:update', id, patch)
+    update: (id, patch) => ipcRenderer.invoke('source:update', id, patch),
+    open: (id) => ipcRenderer.invoke('source:open', id),
+    openExternal: (id) => ipcRenderer.invoke('source:openExternal', id)
   },
   clipboard: {
     write: (text, html) => ipcRenderer.invoke('clipboard:write', text, html)

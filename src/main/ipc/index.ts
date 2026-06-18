@@ -1,4 +1,5 @@
-import { app, clipboard, dialog, ipcMain, session, BrowserWindow } from 'electron'
+import { app, clipboard, dialog, ipcMain, session, shell, BrowserWindow } from 'electron'
+import { classifySourceFile } from '@shared/sourcefile'
 import { promises as fs } from 'fs'
 import { join } from 'path'
 import type {
@@ -357,6 +358,38 @@ export function registerIpc(): void {
   ipcMain.handle('source:update', (_e, id: string, patch: Record<string, string>) => {
     const { db } = projectService.requireCurrent()
     return sources.updateSource(db, id, patch)
+  })
+  ipcMain.handle('source:open', async (_e, id: string) => {
+    const { db, paths } = projectService.requireCurrent()
+    const source = sources.getSource(db, id)
+    if (!source) return null
+    const type = classifySourceFile(source.filePath)
+    if (!source.filePath || type === 'meta' || type === 'file') {
+      return { type: type === 'meta' ? 'meta' : 'file', source }
+    }
+    const abs = join(paths.root, source.filePath)
+    try {
+      if (type === 'html') return { type, source, html: await fs.readFile(abs, 'utf8') }
+      if (type === 'image') {
+        const ext = source.filePath.toLowerCase().split('.').pop()
+        const mime =
+          ext === 'png' ? 'image/png'
+          : ext === 'gif' ? 'image/gif'
+          : ext === 'webp' ? 'image/webp'
+          : ext === 'svg' ? 'image/svg+xml'
+          : 'image/jpeg'
+        const buf = await fs.readFile(abs)
+        return { type, source, dataUrl: `data:${mime};base64,${buf.toString('base64')}` }
+      }
+      return { type, source } // pdf → opened externally
+    } catch {
+      return { type: 'meta', source }
+    }
+  })
+  ipcMain.handle('source:openExternal', async (_e, id: string) => {
+    const { db, paths } = projectService.requireCurrent()
+    const s = sources.getSource(db, id)
+    if (s?.filePath) await shell.openPath(join(paths.root, s.filePath))
   })
 
   // --- clipboard (rich copy: keeps italics when pasted into the editor/Word) --

@@ -14,6 +14,7 @@ import SourcesPanel from './SourcesPanel'
 import FactCheckPanel from './FactCheckPanel'
 import TranscriptsPanel from './TranscriptsPanel'
 import ProofreaderPanel from './ProofreaderPanel'
+import ResearchViewer from './ResearchViewer'
 import CompileDialog from './CompileDialog'
 import SettingsDialog from './SettingsDialog'
 import CompositionMode from './CompositionMode'
@@ -42,6 +43,7 @@ export default function Workspace(): JSX.Element {
   const docWordCount = useStore((s) => s.docWordCount)
   const selectionWordCount = useStore((s) => s.selectionWordCount)
   const splitId = useStore((s) => s.splitId)
+  const viewSourceId = useStore((s) => s.viewSourceId)
   const setSplit = useStore((s) => s.setSplit)
   const composition = useStore((s) => s.composition)
   const setComposition = useStore((s) => s.setComposition)
@@ -286,6 +288,14 @@ export default function Workspace(): JSX.Element {
               <PanelResizeHandle className="resize-handle" />
               <Panel id="proofread" order={11} defaultSize={26} minSize={18} maxSize={42} className="pane">
                 <ProofreaderPanel onClose={() => setShowProof(false)} />
+              </Panel>
+            </>
+          )}
+          {viewSourceId && (
+            <>
+              <PanelResizeHandle className="resize-handle" />
+              <Panel id="research" order={12} defaultSize={34} minSize={22} maxSize={55} className="pane">
+                <ResearchViewer />
               </Panel>
             </>
           )}

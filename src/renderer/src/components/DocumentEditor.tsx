@@ -93,6 +93,7 @@ export default function DocumentEditor({
     setTimeout(() => setFlash(null), 2500)
   }
   const setInserter = useStore((s) => s.setInserter)
+  const setFootnoteInserter = useStore((s) => s.setFootnoteInserter)
   const setProof = useStore((s) => s.setProof)
   const english = useStore((s) => s.meta?.settings.english)
   const oxfordComma = useStore((s) => s.meta?.settings.oxfordComma)
@@ -162,6 +163,11 @@ export default function DocumentEditor({
       setInserter((content: string) => {
         if (editor.isDestroyed) return false
         editor.chain().focus().insertContent(content).run()
+        return true
+      })
+      setFootnoteInserter((text: string) => {
+        if (editor.isDestroyed) return false
+        editor.chain().focus().insertFootnote(text).run()
         return true
       })
     }

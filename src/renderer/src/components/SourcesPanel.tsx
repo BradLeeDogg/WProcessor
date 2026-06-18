@@ -30,6 +30,7 @@ const EDIT_FIELDS: Array<[EditField, string]> = [
 export default function SourcesPanel({ onClose }: Props): JSX.Element {
   const meta = useStore((s) => s.meta)
   const inserter = useStore((s) => s.inserter)
+  const viewSource = useStore((s) => s.viewSource)
   const [sources, setSources] = useState<Source[]>([])
   const [url, setUrl] = useState('')
   const [busy, setBusy] = useState(false)
@@ -178,7 +179,9 @@ export default function SourcesPanel({ onClose }: Props): JSX.Element {
           <li key={s.id}>
             <div className="src-item">
               <span className={`src-kind src-kind-${s.kind}`}>{s.kind}</span>
-              <span className="src-title">{s.title}</span>
+              <button className="src-title src-open" title="Open in Research viewer" onClick={() => viewSource(s.id)}>
+                {s.title}
+              </button>
               <button
                 className="recent-remove"
                 title="Edit citation details"
