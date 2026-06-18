@@ -23,6 +23,7 @@ import { cycleElement, enterElement, SCREENPLAY_ELEMENTS } from '@shared/screenp
 import { acceptAllChanges, hasTrackedChanges, rejectAllChanges } from '@shared/trackchanges'
 import { proofread, type Issue } from '@shared/proofreader'
 import { AME_TO_BRE, BRE_TO_AME } from '@shared/dialect'
+import { findRanges } from '@shared/find'
 import { htmlToProseMirror, markdownToProseMirror, parseScrivener } from './services/importer'
 import { getTemplate, STRUCTURE_BEATS } from './services/templates'
 import {
@@ -524,6 +525,16 @@ async function runChecks(): Promise<void> {
     proofread('Hello ,world', { dialect: 'american', oxfordComma: false }).some((i) => i.rule === 'spacing'),
     'flags a space before punctuation'
   )
+
+  // Find & replace (pure matcher).
+  assert(findRanges('the cat sat on the mat', 'the', false).length === 2, 'findRanges finds all matches')
+  assert(
+    findRanges('The THE the', 'the', true).length === 1 &&
+      findRanges('The THE the', 'the', false).length === 3,
+    'findRanges honors case sensitivity'
+  )
+  assert(findRanges('aaaa', 'aa', false).length === 2, 'findRanges is non-overlapping')
+  assert(findRanges('abc', '', false).length === 0, 'findRanges ignores empty query')
 
   const fromHtml = htmlToProseMirror('<h1>Heading</h1><p>Hello <strong>world</strong></p>')
   assert(

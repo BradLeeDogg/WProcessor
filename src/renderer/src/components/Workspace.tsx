@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 import { useStore } from '../store/useStore'
 import { allDocuments } from '../lib/tree'
+import { runCommand } from '../lib/commands'
 import Binder from './Binder'
 import Editor from './Editor'
 import SplitPane from './SplitPane'
@@ -61,13 +62,17 @@ export default function Workspace(): JSX.Element {
   const [showQuickOpen, setShowQuickOpen] = useState(false)
   const [backupMsg, setBackupMsg] = useState<string | null>(null)
 
-  // Ctrl/⌘-P opens the quick-jump palette (ignored while composing).
+  // Global shortcuts (ignored while composing).
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
-        if (useStore.getState().composition) return
+      if (!(e.ctrlKey || e.metaKey) || useStore.getState().composition) return
+      const k = e.key.toLowerCase()
+      if (k === 'p') {
         e.preventDefault()
         setShowQuickOpen(true)
+      } else if (k === 'f') {
+        e.preventDefault()
+        runCommand('find')
       }
     }
     window.addEventListener('keydown', onKey)

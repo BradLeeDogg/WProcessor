@@ -14,6 +14,8 @@ import { Footnote } from '../editor/footnote'
 import { Screenplay } from '../editor/screenplay'
 import { Deletion, Insertion, TrackChanges, hasTrackedChanges } from '../editor/trackchanges'
 import { Proofreader, getProofIssues } from '../editor/proofreader'
+import { FindReplace, getFindState } from '../editor/findreplace'
+import { onCommand } from '../lib/commands'
 import type { ProofOptions } from '@shared/proofreader'
 import { listComments, listFootnotes } from '../editor/annotations'
 import { playKeyClick } from '../lib/typewriter'
@@ -78,6 +80,12 @@ export default function DocumentEditor({
   const [hasChanges, setHasChanges] = useState(false)
   const [atChange, setAtChange] = useState(false)
   const suggestingRef = useRef(false)
+  const [findOpen, setFindOpen] = useState(false)
+  const [findQuery, setFindQuery] = useState('')
+  const [replaceText, setReplaceText] = useState('')
+  const [caseSensitive, setCaseSensitive] = useState(false)
+  const [findInfo, setFindInfo] = useState({ count: 0, index: 0 })
+  const findInputRef = useRef<HTMLInputElement>(null)
   const setInserter = useStore((s) => s.setInserter)
   const setProof = useStore((s) => s.setProof)
   const english = useStore((s) => s.meta?.settings.english)
@@ -99,6 +107,7 @@ export default function DocumentEditor({
       Deletion,
       TrackChanges,
       Proofreader,
+      FindReplace,
       Placeholder.configure({ placeholder: 'Begin writing…' })
     ],
     content: EMPTY_DOC,
@@ -126,6 +135,7 @@ export default function DocumentEditor({
       if (spModeRef.current) setSpEl((editor.getAttributes('paragraph').sp as ScreenplayElement) ?? null)
       setAtChange(editor.isActive('insertion') || editor.isActive('deletion'))
       pushProof()
+      if (findOpen) refreshFindInfo()
       centerCaret()
     },
     onSelectionUpdate: ({ editor }) => {
@@ -299,6 +309,51 @@ export default function DocumentEditor({
     afterResolveOne()
   }
 
+  // --- find & replace ---
+  const refreshFindInfo = (): void => {
+    if (!editor) return
+    const st = getFindState(editor.state)
+    setFindInfo({ count: st?.matches.length ?? 0, index: st?.index ?? 0 })
+  }
+  const runFind = (q: string, cs: boolean): void => {
+    setFindQuery(q)
+    editor?.commands.setFind(q, cs)
+    refreshFindInfo()
+  }
+  const findNext = (): void => {
+    editor?.commands.findNext()
+    refreshFindInfo()
+  }
+  const findPrev = (): void => {
+    editor?.commands.findPrev()
+    refreshFindInfo()
+  }
+  const replaceOne = (): void => {
+    editor?.chain().replaceCurrent(replaceText).findNext().run()
+    refreshFindInfo()
+  }
+  const replaceAllNow = (): void => {
+    editor?.commands.replaceAll(replaceText)
+    refreshFindInfo()
+  }
+  const openFind = (): void => {
+    setFindOpen(true)
+    if (findQuery) runFind(findQuery, caseSensitive)
+    setTimeout(() => findInputRef.current?.select(), 0)
+  }
+  const closeFind = (): void => {
+    setFindOpen(false)
+    editor?.commands.clearFind()
+    editor?.commands.focus()
+  }
+  useEffect(() => {
+    if (!active) return
+    return onCommand((cmd) => {
+      if (cmd === 'find') openFind()
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, editor, findQuery, caseSensitive])
+
   const addComment = (): void => {
     if (!editor || editor.state.selection.empty) return
     const text = window.prompt('Comment on the selected text:')
@@ -343,9 +398,103 @@ export default function DocumentEditor({
     )
   }
 
+  const fmtActive = (name: string, attrs?: Record<string, unknown>): string =>
+    editor?.isActive(name, attrs) ? 'on' : ''
+
   return (
     <div className="editor-pane">
       {bubble}
+      {editor && (
+        <div className="format-toolbar">
+          <button className={fmtActive('paragraph')} title="Body text" onClick={() => editor.chain().focus().setParagraph().run()}>
+            ¶
+          </button>
+          <button className={fmtActive('heading', { level: 1 })} title="Heading 1" onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}>
+            H1
+          </button>
+          <button className={fmtActive('heading', { level: 2 })} title="Heading 2" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>
+            H2
+          </button>
+          <button className={fmtActive('heading', { level: 3 })} title="Heading 3" onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}>
+            H3
+          </button>
+          <span className="fmt-sep" />
+          <button className={fmtActive('bold')} title="Bold (Ctrl/⌘ B)" onClick={() => editor.chain().focus().toggleBold().run()}>
+            <strong>B</strong>
+          </button>
+          <button className={fmtActive('italic')} title="Italic (Ctrl/⌘ I)" onClick={() => editor.chain().focus().toggleItalic().run()}>
+            <em>I</em>
+          </button>
+          <button className={fmtActive('underline')} title="Underline (Ctrl/⌘ U)" onClick={() => editor.chain().focus().toggleUnderline().run()}>
+            <span style={{ textDecoration: 'underline' }}>U</span>
+          </button>
+          <span className="fmt-sep" />
+          <button className={fmtActive('bulletList')} title="Bullet list" onClick={() => editor.chain().focus().toggleBulletList().run()}>
+            •
+          </button>
+          <button className={fmtActive('orderedList')} title="Numbered list" onClick={() => editor.chain().focus().toggleOrderedList().run()}>
+            1.
+          </button>
+          <button className={fmtActive('blockquote')} title="Block quote" onClick={() => editor.chain().focus().toggleBlockquote().run()}>
+            ❝
+          </button>
+          <span className="fmt-spacer" />
+          <button title="Find &amp; replace (Ctrl/⌘ F)" onClick={openFind}>
+            ⌕
+          </button>
+        </div>
+      )}
+      {findOpen && editor && (
+        <div className="find-bar">
+          <input
+            ref={findInputRef}
+            className="find-bar-input"
+            value={findQuery}
+            placeholder="Find"
+            onChange={(e) => runFind(e.target.value, caseSensitive)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') (e.shiftKey ? findPrev() : findNext())
+              if (e.key === 'Escape') closeFind()
+            }}
+          />
+          <span className="find-bar-count">
+            {findInfo.count ? `${findInfo.index + 1}/${findInfo.count}` : '0/0'}
+          </span>
+          <button title="Previous (⇧⏎)" onClick={findPrev}>
+            ‹
+          </button>
+          <button title="Next (⏎)" onClick={findNext}>
+            ›
+          </button>
+          <button
+            className={caseSensitive ? 'on' : ''}
+            title="Match case"
+            onClick={() => {
+              const cs = !caseSensitive
+              setCaseSensitive(cs)
+              runFind(findQuery, cs)
+            }}
+          >
+            Aa
+          </button>
+          <input
+            className="find-bar-input"
+            value={replaceText}
+            placeholder="Replace"
+            onChange={(e) => setReplaceText(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && replaceOne()}
+          />
+          <button onClick={replaceOne} disabled={!findInfo.count}>
+            Replace
+          </button>
+          <button onClick={replaceAllNow} disabled={!findInfo.count}>
+            All
+          </button>
+          <button className="icon" title="Close (Esc)" onClick={closeFind}>
+            ×
+          </button>
+        </div>
+      )}
       {!hideNotes && (
         <div className="editor-toggles">
           <button

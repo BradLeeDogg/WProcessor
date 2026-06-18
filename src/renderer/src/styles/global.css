@@ -580,6 +580,74 @@ fieldset.field {
   text-decoration: line-through;
 }
 
+/* format toolbar */
+.format-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 12px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--card);
+}
+.format-toolbar button {
+  min-width: 26px;
+  font-size: 0.78rem;
+  padding: 2px 6px;
+  background: transparent;
+  border: 1px solid transparent;
+}
+.format-toolbar button:hover {
+  border-color: var(--rule-strong);
+}
+.format-toolbar button.on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.fmt-sep {
+  width: 1px;
+  height: 16px;
+  background: var(--rule);
+  margin: 0 4px;
+}
+.fmt-spacer {
+  margin-left: auto;
+}
+
+/* find & replace bar */
+.find-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--card);
+}
+.find-bar-input {
+  width: 9rem;
+  font-size: 0.8rem;
+}
+.find-bar-count {
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+  min-width: 2.6rem;
+  text-align: center;
+}
+.find-bar button {
+  font-size: 0.78rem;
+  padding: 2px 7px;
+}
+.find-bar button.on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.manuscript .find-hit {
+  background: rgba(255, 214, 0, 0.4);
+  border-radius: 2px;
+}
+.manuscript .find-current {
+  background: rgba(255, 145, 0, 0.6);
+}
+
 /* proofreader squiggles */
 .manuscript .pf {
   text-decoration: underline;
