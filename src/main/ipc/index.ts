@@ -370,10 +370,11 @@ export function registerIpc(): void {
     const abs = join(paths.root, source.filePath)
     try {
       if (type === 'html') return { type, source, html: await fs.readFile(abs, 'utf8') }
-      if (type === 'image') {
+      if (type === 'image' || type === 'pdf') {
         const ext = source.filePath.toLowerCase().split('.').pop()
         const mime =
-          ext === 'png' ? 'image/png'
+          type === 'pdf' ? 'application/pdf'
+          : ext === 'png' ? 'image/png'
           : ext === 'gif' ? 'image/gif'
           : ext === 'webp' ? 'image/webp'
           : ext === 'svg' ? 'image/svg+xml'
@@ -381,7 +382,7 @@ export function registerIpc(): void {
         const buf = await fs.readFile(abs)
         return { type, source, dataUrl: `data:${mime};base64,${buf.toString('base64')}` }
       }
-      return { type, source } // pdf → opened externally
+      return { type, source }
     } catch {
       return { type: 'meta', source }
     }

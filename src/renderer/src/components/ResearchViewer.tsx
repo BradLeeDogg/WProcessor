@@ -13,6 +13,7 @@ export default function ResearchViewer(): JSX.Element | null {
   const meta = useStore((s) => s.meta)
 
   const [content, setContent] = useState<SourceContent | null>(null)
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null)
   const [quote, setQuote] = useState('')
   const [msg, setMsg] = useState<string | null>(null)
 
@@ -21,6 +22,19 @@ export default function ResearchViewer(): JSX.Element | null {
     setQuote('')
     if (id) void window.api.source.open(id).then(setContent)
   }, [id])
+
+  // Render PDFs inline via Chromium's built-in viewer (blob URL in an iframe).
+  useEffect(() => {
+    if (content?.type === 'pdf' && content.dataUrl) {
+      const b64 = content.dataUrl.split(',')[1] ?? ''
+      const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))
+      const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }))
+      setPdfUrl(url)
+      return () => URL.revokeObjectURL(url)
+    }
+    setPdfUrl(null)
+    return undefined
+  }, [content])
 
   if (!id) return null
   const src = content?.source
@@ -62,6 +76,11 @@ export default function ResearchViewer(): JSX.Element | null {
         <h3 className="rv-title" title={src?.title}>
           {src?.title ?? 'Research'}
         </h3>
+        {(content?.type === 'pdf' || content?.type === 'file' || content?.type === 'image') && (
+          <button className="rv-ext" title="Open in default app" onClick={() => window.api.source.openExternal(id)}>
+            ↗
+          </button>
+        )}
         <button className="icon" onClick={close}>
           ×
         </button>
@@ -81,11 +100,15 @@ export default function ResearchViewer(): JSX.Element | null {
           />
         )}
         {content?.type === 'image' && <img className="rv-image" src={content.dataUrl} alt={src?.title} />}
-        {(content?.type === 'pdf' || content?.type === 'file') && (
+        {content?.type === 'pdf' &&
+          (pdfUrl ? (
+            <iframe className="rv-pdf" src={pdfUrl} title={src?.title} />
+          ) : (
+            <p className="muted drawer-pad">Loading PDF…</p>
+          ))}
+        {content?.type === 'file' && (
           <div className="rv-file drawer-pad">
-            <p className="muted">
-              {content.type === 'pdf' ? 'PDF' : 'File'}: {src?.title}
-            </p>
+            <p className="muted">File: {src?.title}</p>
             <button className="primary" onClick={() => window.api.source.openExternal(id)}>
               Open in default app
             </button>

@@ -79,7 +79,8 @@ function createWindow(): BrowserWindow {
       sandbox: false,
       contextIsolation: true,
       nodeIntegration: false,
-      spellcheck: true
+      spellcheck: true,
+      plugins: true // Chromium's built-in PDF viewer (Research viewer)
     }
   })
 
