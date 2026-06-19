@@ -230,6 +230,18 @@ export interface FoolscapAPI {
   }
   search: {
     run(criteria: CollectionCriteria): Promise<SearchResult[]>
+    /** Per-document match counts for a project-wide replace (no changes). */
+    replacePreview(
+      query: string,
+      caseSensitive: boolean
+    ): Promise<Array<{ itemId: string; title: string; count: number }>>
+    /** Apply a replacement across documents (snapshots each first). */
+    replaceApply(
+      query: string,
+      replacement: string,
+      caseSensitive: boolean,
+      itemIds: string[]
+    ): Promise<{ docs: number; replacements: number }>
   }
   collection: {
     list(): Promise<Collection[]>

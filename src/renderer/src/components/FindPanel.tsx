@@ -10,6 +10,8 @@ interface Props {
 export default function FindPanel({ onClose }: Props): JSX.Element {
   const labels = useStore((s) => s.labels)
   const select = useStore((s) => s.select)
+  const flushActive = useStore((s) => s.flushActive)
+  const bumpDocReload = useStore((s) => s.bumpDocReload)
 
   const [text, setText] = useState('')
   const [labelId, setLabelId] = useState('')
@@ -17,6 +19,13 @@ export default function FindPanel({ onClose }: Props): JSX.Element {
   const [results, setResults] = useState<SearchResult[]>([])
   const [searched, setSearched] = useState(false)
   const [collections, setCollections] = useState<Collection[]>([])
+
+  const [replaceWith, setReplaceWith] = useState('')
+  const [caseSensitive, setCaseSensitive] = useState(false)
+  const [preview, setPreview] = useState<Array<{ itemId: string; title: string; count: number }>>([])
+  const [picked, setPicked] = useState<Set<string>>(new Set())
+  const [repMsg, setRepMsg] = useState<string | null>(null)
+  const [repBusy, setRepBusy] = useState(false)
 
   const statuses = labels.filter((l) => l.kind === 'status')
   const labelDefs = labels.filter((l) => l.kind === 'label')
@@ -54,6 +63,44 @@ export default function FindPanel({ onClose }: Props): JSX.Element {
 
   const removeCollection = async (id: string): Promise<void> => {
     setCollections(await window.api.collection.remove(id))
+  }
+
+  const runPreview = async (): Promise<void> => {
+    if (!text.trim()) return
+    const p = await window.api.search.replacePreview(text, caseSensitive)
+    setPreview(p)
+    setPicked(new Set(p.map((x) => x.itemId)))
+    setRepMsg(p.length ? null : 'No matches to replace.')
+  }
+  const togglePick = (id: string): void =>
+    setPicked((s) => {
+      const n = new Set(s)
+      if (n.has(id)) n.delete(id)
+      else n.add(id)
+      return n
+    })
+  const applyReplace = async (): Promise<void> => {
+    const ids = preview.filter((p) => picked.has(p.itemId)).map((p) => p.itemId)
+    if (!ids.length) return
+    if (
+      !window.confirm(
+        `Replace “${text}” with “${replaceWith}” in ${ids.length} document${ids.length === 1 ? '' : 's'}? A snapshot of each is taken first.`
+      )
+    )
+      return
+    setRepBusy(true)
+    try {
+      await flushActive?.()
+      const res = await window.api.search.replaceApply(text, replaceWith, caseSensitive, ids)
+      bumpDocReload()
+      setPreview([])
+      setPicked(new Set())
+      setRepMsg(
+        `Replaced ${res.replacements} occurrence${res.replacements === 1 ? '' : 's'} in ${res.docs} document${res.docs === 1 ? '' : 's'}.`
+      )
+    } finally {
+      setRepBusy(false)
+    }
   }
 
   return (
@@ -97,6 +144,50 @@ export default function FindPanel({ onClose }: Props): JSX.Element {
           </button>
           <button onClick={saveCollection}>Save as collection</button>
         </div>
+      </div>
+
+      <div className="find-replace drawer-pad">
+        <input
+          value={replaceWith}
+          placeholder="Replace with…"
+          onChange={(e) => setReplaceWith(e.target.value)}
+        />
+        <div className="find-rep-row">
+          <label className="find-case">
+            <input
+              type="checkbox"
+              checked={caseSensitive}
+              onChange={(e) => setCaseSensitive(e.target.checked)}
+            />
+            Match case
+          </label>
+          <button onClick={runPreview} disabled={!text.trim()}>
+            Preview replace
+          </button>
+        </div>
+        {repMsg && <p className="muted find-rep-msg">{repMsg}</p>}
+        {preview.length > 0 && (
+          <div className="find-rep-preview">
+            <ul>
+              {preview.map((p) => (
+                <li key={p.itemId}>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={picked.has(p.itemId)}
+                      onChange={() => togglePick(p.itemId)}
+                    />
+                    <span className="find-rep-title">{p.title}</span>
+                    <span className="find-count">{p.count}</span>
+                  </label>
+                </li>
+              ))}
+            </ul>
+            <button className="primary" disabled={repBusy || picked.size === 0} onClick={applyReplace}>
+              Replace in {picked.size} doc{picked.size === 1 ? '' : 's'}
+            </button>
+          </div>
+        )}
       </div>
 
       <ul className="find-results">

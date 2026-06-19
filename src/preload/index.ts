@@ -60,7 +60,11 @@ const api: FoolscapAPI = {
     isFullScreen: () => ipcRenderer.invoke('window:isFullScreen')
   },
   search: {
-    run: (criteria) => ipcRenderer.invoke('search:run', criteria)
+    run: (criteria) => ipcRenderer.invoke('search:run', criteria),
+    replacePreview: (query, caseSensitive) =>
+      ipcRenderer.invoke('search:replacePreview', query, caseSensitive),
+    replaceApply: (query, replacement, caseSensitive, itemIds) =>
+      ipcRenderer.invoke('search:replaceApply', query, replacement, caseSensitive, itemIds)
   },
   collection: {
     list: () => ipcRenderer.invoke('collection:list'),

@@ -8,7 +8,7 @@ import * as meta from './services/metadata'
 import { countWords, docFromParagraphs, emptyDoc, readDocument, writeDocument } from './services/documents'
 import { createSnapshot, listSnapshots, restoreSnapshot } from './services/snapshots'
 import { createBackup } from './services/backups'
-import { searchProject } from './services/search'
+import { applyReplace, previewReplace, searchProject } from './services/search'
 import { createCollection, listCollections, removeCollection } from './services/collections'
 import { createSource, extractReadable, listSources, updateSource } from './services/sources'
 import { buildBibliography, formatCitation, inTextCitation } from '@shared/citations'
@@ -26,6 +26,7 @@ import { acceptAllChanges, hasTrackedChanges, rejectAllChanges } from '@shared/t
 import { proofread, type Issue } from '@shared/proofreader'
 import { AME_TO_BRE, BRE_TO_AME } from '@shared/dialect'
 import { findRanges } from '@shared/find'
+import { countInDoc, replaceInDoc } from '@shared/replace'
 import { mergeDocs, docLines } from '@shared/docops'
 import { diffLines } from '@shared/diff'
 import { classifySourceFile } from '@shared/sourcefile'
@@ -573,6 +574,38 @@ async function runChecks(): Promise<void> {
   )
   assert(findRanges('aaaa', 'aa', false).length === 2, 'findRanges is non-overlapping')
   assert(findRanges('abc', '', false).length === 0, 'findRanges ignores empty query')
+
+  // Project-wide replace: pure transform + service (snapshots first).
+  {
+    const d: ProseMirrorNode = {
+      type: 'doc',
+      content: [{ type: 'paragraph', content: [{ type: 'text', text: 'cat and cat and dog' }] }]
+    }
+    assert(countInDoc(d, 'cat', false) === 2, 'countInDoc counts matches')
+    const r = replaceInDoc(d, 'cat', 'fox', false)
+    assert(
+      r.count === 2 && JSON.stringify(r.node).includes('fox and fox and dog'),
+      'replaceInDoc replaces every match, preserving structure'
+    )
+  }
+  {
+    const { db: rdb, paths: rp } = projectService.requireCurrent()
+    const rep = createItem(rdb, { type: 'document', title: 'RepDoc', parentId: null })
+    await writeDocument(rp.root, rep.id, docFromParagraphs(['banana banana split']))
+    const pv = await previewReplace(rdb, rp.root, 'banana', false)
+    assert(pv.some((x) => x.itemId === rep.id && x.count === 2), 'previewReplace reports per-doc counts')
+    const res = await applyReplace(rdb, rp.root, 'banana', 'apple', false, [rep.id])
+    assert(res.docs === 1 && res.replacements === 2, 'applyReplace reports docs + replacements')
+    const after = await readDocument(rp.root, rep.id)
+    assert(
+      !!after && extractPlainText(after).includes('apple apple') && !extractPlainText(after).includes('banana'),
+      'applyReplace rewrote the document on disk'
+    )
+    assert(
+      listSnapshots(rdb, rep.id).some((s) => s.name === 'Before replace'),
+      'applyReplace snapshots each document before changing it'
+    )
+  }
 
   // Research viewer: source file classification.
   assert(classifySourceFile('research/x.html') === 'html', 'classify html')

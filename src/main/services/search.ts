@@ -1,6 +1,60 @@
 import type { CollectionCriteria, SearchResult } from '@shared/types'
-import type { DB } from './db'
-import { extractPlainText, readDocument } from './documents'
+import { type DB, listBinder } from './db'
+import { countWords, extractPlainText, readDocument, writeDocument } from './documents'
+import { setWordCount } from './binder'
+import { createSnapshot } from './snapshots'
+import { countInDoc, replaceInDoc } from '@shared/replace'
+
+export interface ReplacePreviewItem {
+  itemId: string
+  title: string
+  count: number
+}
+
+/** Per-document match counts for a project-wide replace (no changes made). */
+export async function previewReplace(
+  db: DB,
+  root: string,
+  query: string,
+  caseSensitive: boolean
+): Promise<ReplacePreviewItem[]> {
+  const out: ReplacePreviewItem[] = []
+  if (!query) return out
+  for (const item of listBinder(db)) {
+    if (item.type !== 'document') continue
+    const content = await readDocument(root, item.id)
+    if (!content) continue
+    const count = countInDoc(content.doc, query, caseSensitive)
+    if (count > 0) out.push({ itemId: item.id, title: item.title, count })
+  }
+  return out
+}
+
+/** Apply a replacement across the given documents, snapshotting each first. */
+export async function applyReplace(
+  db: DB,
+  root: string,
+  query: string,
+  replacement: string,
+  caseSensitive: boolean,
+  itemIds: string[]
+): Promise<{ docs: number; replacements: number }> {
+  let docs = 0
+  let replacements = 0
+  for (const id of itemIds) {
+    const content = await readDocument(root, id)
+    if (!content) continue
+    const r = replaceInDoc(content.doc, query, replacement, caseSensitive)
+    if (!r.count) continue
+    await createSnapshot(db, root, id, 'Before replace')
+    const next = { ...content, doc: r.node }
+    await writeDocument(root, id, next)
+    setWordCount(db, id, countWords(next))
+    docs++
+    replacements += r.count
+  }
+  return { docs, replacements }
+}
 
 const PAD = 45
 

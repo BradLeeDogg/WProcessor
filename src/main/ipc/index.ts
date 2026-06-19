@@ -18,7 +18,7 @@ import { documentFile, snapshotFile } from '../services/paths'
 import * as snapshots from '../services/snapshots'
 import { createBackup, listBackups, pruneBackups } from '../services/backups'
 import { getRecents, removeRecent } from '../services/recents'
-import { searchProject } from '../services/search'
+import { applyReplace, previewReplace, searchProject } from '../services/search'
 import { createCollection, listCollections, removeCollection } from '../services/collections'
 import * as metadata from '../services/metadata'
 import * as sources from '../services/sources'
@@ -278,6 +278,17 @@ export function registerIpc(): void {
     const { db, paths } = projectService.requireCurrent()
     return searchProject(db, paths.root, criteria)
   })
+  ipcMain.handle('search:replacePreview', (_e, query: string, caseSensitive: boolean) => {
+    const { db, paths } = projectService.requireCurrent()
+    return previewReplace(db, paths.root, query, caseSensitive)
+  })
+  ipcMain.handle(
+    'search:replaceApply',
+    (_e, query: string, replacement: string, caseSensitive: boolean, itemIds: string[]) => {
+      const { db, paths } = projectService.requireCurrent()
+      return applyReplace(db, paths.root, query, replacement, caseSensitive, itemIds)
+    }
+  )
   ipcMain.handle('collection:list', () => {
     const { db } = projectService.requireCurrent()
     return listCollections(db)

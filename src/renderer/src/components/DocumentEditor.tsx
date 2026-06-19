@@ -114,6 +114,8 @@ export default function DocumentEditor({
   }
   const setInserter = useStore((s) => s.setInserter)
   const setFootnoteInserter = useStore((s) => s.setFootnoteInserter)
+  const setFlushActive = useStore((s) => s.setFlushActive)
+  const docReloadToken = useStore((s) => s.docReloadToken)
   const setProof = useStore((s) => s.setProof)
   const english = useStore((s) => s.meta?.settings.english)
   const oxfordComma = useStore((s) => s.meta?.settings.oxfordComma)
@@ -208,6 +210,7 @@ export default function DocumentEditor({
         editor.chain().focus().insertFootnote(text).run()
         return true
       })
+      if (active) setFlushActive(() => save())
     }
   })
 
@@ -299,7 +302,7 @@ export default function DocumentEditor({
       if (dirtyRef.current) void save()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [docId, editor])
+  }, [docId, editor, docReloadToken])
 
   // Re-proofread when the dialect / Oxford-comma preference changes.
   useEffect(() => {

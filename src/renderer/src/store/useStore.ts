@@ -44,6 +44,12 @@ interface AppState {
   viewSourceId: string | null
   viewSource: (id: string) => void
   closeViewSource: () => void
+  /** Flush the active editor's pending save (before a project-wide replace). */
+  flushActive: (() => Promise<void>) | null
+  setFlushActive: (fn: (() => Promise<void>) | null) => void
+  /** Bumped to make open editors reload from disk (after a project-wide replace). */
+  docReloadToken: number
+  bumpDocReload: () => void
   /** Proofreading issues for the active document + fix/jump bridges to its editor. */
   proofIssues: DocIssue[]
   proofApply: ((from: number, to: number, replacement: string) => void) | null
@@ -97,6 +103,8 @@ export const useStore = create<AppState>((set) => ({
   inserter: null,
   footnoteInserter: null,
   viewSourceId: null,
+  flushActive: null,
+  docReloadToken: 0,
   proofIssues: [],
   proofApply: null,
   proofFocus: null,
@@ -144,6 +152,8 @@ export const useStore = create<AppState>((set) => ({
   setFootnoteInserter: (fn) => set({ footnoteInserter: fn }),
   viewSource: (id) => set({ viewSourceId: id }),
   closeViewSource: () => set({ viewSourceId: null }),
+  setFlushActive: (fn) => set({ flushActive: fn }),
+  bumpDocReload: () => set((s) => ({ docReloadToken: s.docReloadToken + 1 })),
   setProof: (issues, apply, focus) =>
     set({ proofIssues: issues, proofApply: apply, proofFocus: focus }),
   setSplit: (id) => set({ splitId: id }),
