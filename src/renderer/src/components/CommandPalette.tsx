@@ -31,7 +31,8 @@ const COMMANDS: Cmd[] = [
   { id: 'snapshot', label: 'Snapshots' },
   { id: 'backup-now', label: 'Back up now' },
   { id: 'compile', label: 'Compile / Export…', hint: 'Ctrl/⌘ E' },
-  { id: 'open-settings', label: 'Settings…' }
+  { id: 'open-settings', label: 'Settings…' },
+  { id: 'help', label: 'Help & Shortcuts', hint: 'Ctrl/⌘ /' }
 ]
 
 /** ⌘/Ctrl-K palette: type to run any command. */

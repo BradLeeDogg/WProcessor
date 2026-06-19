@@ -122,6 +122,27 @@ export default function Launcher(): JSX.Element {
               ))}
             </ul>
           </section>
+
+          {recents.length === 0 && (
+            <section className="launcher-welcome">
+              <h2>New here?</h2>
+              <ul>
+                <li>
+                  Click <strong>New Project</strong> and pick a type — novel, nonfiction, essay,
+                  thesis, screenplay, and more each set up their own structure.
+                </li>
+                <li>
+                  Press <kbd>Ctrl/⌘ K</kbd> anytime for the command palette (and{' '}
+                  <kbd>Ctrl/⌘ /</kbd> for tips).
+                </li>
+                <li>
+                  Capture web pages &amp; import PDFs in <strong>Sources</strong>, then read them
+                  beside your draft and pull quotes into footnotes.
+                </li>
+                <li>Compile to DOCX, PDF, ePub, or Markdown when you’re ready to share.</li>
+              </ul>
+            </section>
+          )}
         </div>
       ) : (
         <div className="new-project">

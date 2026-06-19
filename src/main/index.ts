@@ -60,6 +60,12 @@ function buildAppMenu(win: BrowserWindow): void {
         { type: 'separator' },
         { role: 'togglefullscreen' }
       ]
+    },
+    {
+      role: 'help',
+      submenu: [
+        { label: 'Keyboard Shortcuts & Tips', accelerator: 'CmdOrCtrl+/', click: send('help') }
+      ]
     }
   ]
   Menu.setApplicationMenu(Menu.buildFromTemplate(template))
@@ -188,6 +194,7 @@ app.whenReady().then(() => {
               await step(() => S.getState().setFolderView('scrivenings'), 450);
               const doc = S.getState().tree.find((t) => t.type === 'document');
               if (doc) S.getState().setSplit(doc.id);
+              await step(() => window.dispatchEvent(new CustomEvent('wp:cmd', { detail: 'help' })), 300);
               await step(() => window.dispatchEvent(new CustomEvent('wp:cmd', { detail: 'command-palette' })), 350);
               await step(() => S.getState().viewSource('smoke-none'), 350);
               await step(() => S.getState().closeViewSource(), 250);
@@ -197,7 +204,7 @@ app.whenReady().then(() => {
           })`
         )
         setTimeout(() => {
-          console.log('WP_SMOKE_WORKSPACE_OK: workspace, find, quick-open, command-palette, research-viewer, inspector, sources, fact-check, transcripts, proofread, corkboard, outliner, split & composition mounted')
+          console.log('WP_SMOKE_WORKSPACE_OK: workspace, find, quick-open, command-palette, help, research-viewer, inspector, sources, fact-check, transcripts, proofread, corkboard, outliner, split & composition mounted')
           app.quit()
         }, 4200)
       } catch (err) {

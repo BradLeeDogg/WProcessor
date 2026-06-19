@@ -800,6 +800,75 @@ fieldset.field {
   color: var(--ink-faint);
 }
 
+/* help / onboarding */
+.help-dialog {
+  width: 760px;
+  max-width: 92vw;
+}
+.help-body {
+  padding: 6px 18px 4px;
+}
+.help-cols {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 22px;
+  margin-top: 8px;
+}
+.help-cols h3 {
+  margin: 0 0 6px;
+  font-size: 0.92rem;
+}
+.help-tips div {
+  margin-bottom: 8px;
+}
+.help-tips dt,
+.help-keys dt {
+  font-weight: 600;
+  font-size: 0.84rem;
+}
+.help-tips dd {
+  margin: 1px 0 0;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+}
+.help-keys div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.help-keys dd {
+  margin: 0;
+}
+.help-foot {
+  font-size: 0.74rem;
+  margin-top: 12px;
+}
+kbd {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  background: var(--hover);
+  border: 1px solid var(--rule-strong);
+  border-radius: 4px;
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+.launcher-welcome {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--rule);
+}
+.launcher-welcome ul {
+  margin: 6px 0 0;
+  padding-left: 1.1rem;
+}
+.launcher-welcome li {
+  margin: 5px 0;
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+}
+
 /* inline images in the manuscript */
 .manuscript .ProseMirror img.ms-image {
   display: block;

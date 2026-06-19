@@ -29,6 +29,7 @@ export type AppCommand =
   | 'open-settings'
   | 'backup-now'
   | 'toggle-theme'
+  | 'help'
 
 export function runCommand(cmd: AppCommand): void {
   window.dispatchEvent(new CustomEvent('wp:cmd', { detail: cmd }))

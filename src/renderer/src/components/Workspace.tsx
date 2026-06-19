@@ -20,6 +20,7 @@ import SettingsDialog from './SettingsDialog'
 import CompositionMode from './CompositionMode'
 import QuickOpen from './QuickOpen'
 import CommandPalette from './CommandPalette'
+import HelpDialog from './HelpDialog'
 
 function saveLabel(state: string, at: number | null): string {
   switch (state) {
@@ -65,7 +66,16 @@ export default function Workspace(): JSX.Element {
   const [showSettings, setShowSettings] = useState(false)
   const [showQuickOpen, setShowQuickOpen] = useState(false)
   const [showPalette, setShowPalette] = useState(false)
+  const [showHelp, setShowHelp] = useState(false)
   const [backupMsg, setBackupMsg] = useState<string | null>(null)
+
+  // First-run: show the welcome/help sheet once.
+  useEffect(() => {
+    if (!localStorage.getItem('wp-onboarded-v1')) {
+      setShowHelp(true)
+      localStorage.setItem('wp-onboarded-v1', '1')
+    }
+  }, [])
 
   // Workspace-owned menu/shortcut commands (ref keeps handler closures fresh).
   const cmdRef = useRef<(cmd: string) => void>(() => {})
@@ -98,6 +108,9 @@ export default function Workspace(): JSX.Element {
         break
       case 'command-palette':
         setShowPalette(true)
+        break
+      case 'help':
+        setShowHelp(true)
         break
       case 'panel-inspector':
         setShowInspector((v) => !v)
@@ -342,6 +355,7 @@ export default function Workspace(): JSX.Element {
       {showSettings && <SettingsDialog onClose={() => setShowSettings(false)} />}
       {showQuickOpen && <QuickOpen onClose={() => setShowQuickOpen(false)} />}
       {showPalette && <CommandPalette onClose={() => setShowPalette(false)} />}
+      {showHelp && <HelpDialog onClose={() => setShowHelp(false)} />}
     </div>
   )
 }
