@@ -3,6 +3,7 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { registerIpc } from './ipc'
 import { projectService } from './services/project'
+import * as thesaurus from './services/thesaurus'
 
 /** Native menu — discoverability + global accelerators. Items send high-level
  *  commands to the renderer's command bus; standard roles keep undo/copy/paste. */
@@ -96,19 +97,48 @@ function createWindow(): BrowserWindow {
   // American-English spell check by default, with a suggestions context menu.
   window.webContents.session.setSpellCheckerLanguages(['en-US'])
   window.webContents.on('context-menu', (_e, params) => {
-    if (!params.misspelledWord) return
     const menu = new Menu()
-    for (const s of params.dictionarySuggestions.slice(0, 5)) {
-      menu.append(new MenuItem({ label: s, click: () => window.webContents.replaceMisspelling(s) }))
+
+    // Spelling suggestions for a misspelled word.
+    if (params.misspelledWord) {
+      for (const s of params.dictionarySuggestions.slice(0, 5)) {
+        menu.append(new MenuItem({ label: s, click: () => window.webContents.replaceMisspelling(s) }))
+      }
+      if (params.dictionarySuggestions.length) menu.append(new MenuItem({ type: 'separator' }))
+      menu.append(
+        new MenuItem({
+          label: 'Add to dictionary',
+          click: () => window.webContents.session.addWordToSpellCheckerDictionary(params.misspelledWord)
+        })
+      )
     }
-    if (params.dictionarySuggestions.length) menu.append(new MenuItem({ type: 'separator' }))
-    menu.append(
-      new MenuItem({
-        label: 'Add to dictionary',
-        click: () => window.webContents.session.addWordToSpellCheckerDictionary(params.misspelledWord)
-      })
-    )
-    menu.popup()
+
+    // Thesaurus: synonyms for a single selected word, grouped by sense.
+    const word = params.selectionText.trim()
+    if (params.isEditable && /^[A-Za-z][A-Za-z'-]{1,30}$/.test(word)) {
+      const lower = word.toLowerCase()
+      const posLabel = (p: string): string =>
+        p === 'n' ? 'noun' : p === 'v' ? 'verb' : p === 'adj' ? 'adjective' : 'adverb'
+      const sub = new Menu()
+      let groups = 0
+      for (const sense of thesaurus.lookup(word)) {
+        const syns = sense.syns.filter((s) => s !== lower)
+        if (!syns.length) continue
+        if (groups > 0) sub.append(new MenuItem({ type: 'separator' }))
+        const def = sense.def.length > 38 ? sense.def.slice(0, 38) + '…' : sense.def
+        sub.append(new MenuItem({ label: def ? `${posLabel(sense.pos)} — ${def}` : posLabel(sense.pos), enabled: false }))
+        for (const s of syns.slice(0, 6)) {
+          sub.append(new MenuItem({ label: s, click: () => window.webContents.send('thesaurus:replace', s) }))
+        }
+        if (++groups >= 4) break
+      }
+      if (sub.items.length) {
+        if (menu.items.length) menu.append(new MenuItem({ type: 'separator' }))
+        menu.append(new MenuItem({ label: `Synonyms for “${word}”`, submenu: sub }))
+      }
+    }
+
+    if (menu.items.length) menu.popup()
   })
 
   buildAppMenu(window)
@@ -169,6 +199,12 @@ app.whenReady().then(() => {
   }
 
   const win = createWindow()
+
+  // Warm the offline thesaurus a few seconds after launch so the first
+  // right-click "Synonyms" lookup is instant (skip during headless tests).
+  if (!process.env['WP_SMOKE'] && !process.env['WP_SELFTEST']) {
+    setTimeout(() => thesaurus.warm(), 4000)
+  }
 
   // Headless GUI smoke: drive the renderer into the Workspace + TipTap editor so
   // a runtime error in the editor path surfaces, then quit.

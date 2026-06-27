@@ -36,6 +36,7 @@ import { imageSize, fitWidth } from '@shared/imagesize'
 import { trashItem, restoreItem, listTrash, mergeWithPrevious } from './services/binder'
 import { classifyPdfBlocks, htmlToProseMirror, markdownToProseMirror, parseScrivener, pdfTextToParagraphs } from './services/importer'
 import { getCorkLayout, setCorkRect } from './services/corkboard'
+import * as thesaurus from './services/thesaurus'
 import pdfParse from 'pdf-parse/lib/pdf-parse.js'
 import { exportAnnotatedPdf, getAnnotations, saveAnnotations } from './services/pdfannotations'
 import { getTemplate, STRUCTURE_BEATS } from './services/templates'
@@ -1019,6 +1020,19 @@ async function runChecks(): Promise<void> {
       'corkboard card rect persists and clamps to sane minimums'
     )
     assert(getCorkLayout(ckdb)['card-xyz']?.y === 40, 'corkboard layout reloads from the db')
+  }
+
+  // Offline thesaurus (WordNet): synonyms, antonyms, case + plural fallback.
+  {
+    const q = thesaurus.lookup('quickly')
+    assert(
+      q.some((s) => s.syns.includes('rapidly')) && q.some((s) => s.ants.includes('slowly')),
+      'thesaurus returns synonyms (rapidly) and antonyms (slowly)'
+    )
+    assert(
+      thesaurus.lookup('QUICKLY').length === q.length && thesaurus.lookup('cars').length > 0,
+      'thesaurus lookup is case-insensitive and resolves plurals to a base form'
+    )
   }
 
   const savedPath = res.meta.path

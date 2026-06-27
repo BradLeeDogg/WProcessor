@@ -8,6 +8,14 @@ const api: FoolscapAPI = {
   onMenuCommand: (cb) => {
     ipcRenderer.on('menu-command', (_e, cmd: string) => cb(cmd))
   },
+  onThesaurusReplace: (cb) => {
+    const handler = (_e: unknown, synonym: string): void => cb(synonym)
+    ipcRenderer.on('thesaurus:replace', handler)
+    return () => ipcRenderer.removeListener('thesaurus:replace', handler)
+  },
+  thesaurus: {
+    lookup: (word) => ipcRenderer.invoke('thesaurus:lookup', word)
+  },
   app: {
     health: () => ipcRenderer.invoke('app:health'),
     getRecentProjects: () => ipcRenderer.invoke('app:getRecentProjects'),

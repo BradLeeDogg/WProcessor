@@ -11,6 +11,10 @@ files:
 asarUnpack:
   # native module must live unpacked so its .node binary is loadable
   - "**/node_modules/better-sqlite3/**"
+extraResources:
+  # offline thesaurus data (generated at build time), read from resourcesPath
+  - from: resources/thesaurus.txt
+    to: thesaurus.txt
 win:
   target:
     - nsis

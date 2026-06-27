@@ -4,6 +4,7 @@ import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import Placeholder from '@tiptap/extension-placeholder'
 import CharacterCount from '@tiptap/extension-character-count'
+import { TextSelection } from '@tiptap/pm/state'
 import type { JSONContent } from '@tiptap/core'
 import type { DocumentContent, ManuscriptDefaults, ProseMirrorNode } from '@shared/types'
 import { DOCUMENT_CONTENT_VERSION } from '@shared/types'
@@ -178,6 +179,26 @@ export default function DocumentEditor({
             else if (event.key.length === 1 || event.key === 'Backspace' || event.key === 'Delete')
               playKeyClick()
           }
+          return false
+        },
+        // Right-clicking inside a word selects it, so the native "Synonyms"
+        // menu has a word to work with without a manual double-click first.
+        contextmenu: (view, event) => {
+          if (!view.state.selection.empty) return false
+          const at = view.posAtCoords({ left: event.clientX, top: event.clientY })
+          if (!at) return false
+          const $pos = view.state.doc.resolve(at.pos)
+          const text = $pos.parent.textContent
+          const offset = $pos.parentOffset
+          if (!text) return false
+          const isWord = (ch: string): boolean => /[A-Za-z'’-]/.test(ch)
+          let start = offset
+          let end = offset
+          while (start > 0 && isWord(text[start - 1]!)) start--
+          while (end < text.length && isWord(text[end]!)) end++
+          if (end <= start) return false
+          const base = $pos.start()
+          view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, base + start, base + end)))
           return false
         }
       },

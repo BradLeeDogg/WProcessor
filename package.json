@@ -6,16 +6,17 @@
   "license": "MIT",
   "main": "./out/main/index.js",
   "scripts": {
-    "dev": "electron-vite dev",
+    "thesaurus": "node scripts/build-thesaurus.cjs",
+    "dev": "npm run thesaurus && electron-vite dev",
     "start": "electron-vite preview",
-    "build": "electron-vite build",
+    "build": "npm run thesaurus && electron-vite build",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
     "rebuild": "electron-rebuild -f -w better-sqlite3",
     "postinstall": "electron-builder install-app-deps",
-    "package:win": "electron-vite build && electron-builder --win",
-    "package:dir": "electron-vite build && electron-builder --dir"
+    "package:win": "npm run build && electron-builder --win",
+    "package:dir": "npm run build && electron-builder --dir"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.1",
@@ -62,6 +63,7 @@
     "react-resizable-panels": "^2.1.7",
     "typescript": "^5.7.3",
     "vite": "^5.4.14",
+    "wordnet-db": "^3.1.14",
     "zustand": "^5.0.3"
   }
 }

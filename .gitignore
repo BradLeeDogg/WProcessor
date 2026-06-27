@@ -8,3 +8,6 @@ release/
 .env.*
 # local test projects
 *.writeproject/
+
+# Generated offline thesaurus (built from wordnet-db at build time)
+resources/thesaurus.txt

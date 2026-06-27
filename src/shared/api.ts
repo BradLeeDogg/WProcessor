@@ -32,6 +32,14 @@ export interface CardRect {
   h: number
 }
 
+/** One sense of a word in the offline thesaurus. */
+export interface ThesaurusSense {
+  pos: string // 'n' | 'v' | 'adj' | 'adv'
+  def: string
+  syns: string[]
+  ants: string[]
+}
+
 export interface ManualSourceInput {
   kind: SourceKind
   title: string
@@ -179,6 +187,13 @@ export interface BinderMoveInput {
 export interface FoolscapAPI {
   /** Subscribe to native-menu commands (forwarded to the renderer command bus). */
   onMenuCommand(cb: (cmd: string) => void): void
+  /** Replace the current editor selection with a synonym chosen from the
+   *  right-click thesaurus menu. Returns an unsubscribe function. */
+  onThesaurusReplace(cb: (synonym: string) => void): () => void
+  thesaurus: {
+    /** Synonym/antonym senses for a word (offline; empty if none). */
+    lookup(word: string): Promise<ThesaurusSense[]>
+  }
   app: {
     health(): Promise<{ ok: true; pid: number }>
     getRecentProjects(): Promise<RecentProject[]>

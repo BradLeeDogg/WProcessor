@@ -14,6 +14,7 @@ import { projectService } from '../services/project'
 import * as binder from '../services/binder'
 import * as corkboard from '../services/corkboard'
 import type { CardRect } from '../services/corkboard'
+import * as thesaurus from '../services/thesaurus'
 import { STRUCTURE_BEATS } from '../services/templates'
 import { countWords, emptyDoc, readDocument, writeDocument } from '../services/documents'
 import { documentFile, snapshotFile } from '../services/paths'
@@ -125,6 +126,9 @@ export function registerIpc(): void {
     const { db } = projectService.requireCurrent()
     return corkboard.setCorkRect(db, id, rect)
   })
+
+  // Offline thesaurus — global (no open project required).
+  ipcMain.handle('thesaurus:lookup', (_e, word: string) => thesaurus.lookup(word))
 
   ipcMain.handle('binder:create', async (_e, input: BinderCreateInput) => {
     const { db, paths } = projectService.requireCurrent()
